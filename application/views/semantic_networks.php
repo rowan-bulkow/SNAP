@@ -24,7 +24,7 @@
 			<p>This page takes all the resulting .dl files of Undirected Graphs, combines them into a single succinct graph using Gephi.<br />
 			Nodes are grouped into circles and colored based on their modularity class then sized and ordered along the circle by Betweenness Centrality. <br />
 			Resulting .gexf file can be used in Gephi if you so choose, .pdf file gives user a brief 2D visualized over view of the network, and the .txt file of time stamped dates is used for 3D visualization.<p />
-			<p class="current_val">Current Layout: 
+			<p class="current_val">Current Layout:
 						<?php $layout= $this->session->userdata('layout');
 						if($layout == 0)
 						{
@@ -51,6 +51,12 @@
 				echo '<ul>';
 
 				echo '<form id="checkbox_form" name="checkbox_form" method="post" action="semantic_networks/submit_files">';
+				echo '<button class="btn btn-primary" name="file_action" value="netgen" type="submit">Semantic Network Generation</button>';
+				echo '<br/>';
+				echo '<br/>';
+				echo '<button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>	<button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>';
+				echo '<br/>';
+				echo '<br/>';
 				echo "<input type='checkbox' name='select_all' onClick='selectAll(this)' > Select All<br/>";
 				foreach($files as $file => $file_name)
 				{
@@ -68,16 +74,6 @@
 					echo '<a href="' .$url. '">' .$file_name. '</a><br/>';
 					}
 				}
-
-				echo '<button class="btn btn-primary" name="file_action" value="netgen" type="submit">Semantic Network Generation</button>';
-
-				echo '<br/>';
-				echo '<br/>';
-
-
-
-				echo '<button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>	<button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>';
-
 				echo '</form>';
 				echo '</ul>';
 			?>
