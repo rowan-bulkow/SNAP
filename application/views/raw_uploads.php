@@ -29,7 +29,7 @@
 			This date is used as time stamp to later represent the the file's nodes as a layer in 3D space.</p>
 			<br />
 
-			<?php 
+			<?php
 			echo $error;
 			$message = $this->session->flashdata();
 			if(!empty($message['flash_message'])){
@@ -43,7 +43,7 @@
 			?>
 
 			<?php echo form_open_multipart('raw_uploads/upload_text'); ?>
-			<div id="upload_area"> 
+			<div id="upload_area">
 				<div class="upload_form" id="upload_form">
 					<input  type="file" name="raw_files[]" id="raw_files[]" multiple="multiple" accept="text/plain"/>
 					<input class="btn btn-primary" type="submit" value="Upload" name="submit"/>
@@ -51,39 +51,14 @@
 			</div>
 			</form>
 
-			<?php 
-				echo '<ul>';
-				echo '<form id="checkbox_form" name="checkbox_form" method="post" action="raw_uploads/submit_files" >';
-				//echo '<form id="checkbox_form" name="checkbox_form" method="post" action="/submit_files">';
-				echo "<input type='checkbox' name='select_all' onClick='selectAll(this)' > Select All<br/>";
-				foreach($files as $file => $file_name)
-				{
-					$file_parts=pathinfo($file_name);
-					if($file_parts['extension']=="txt")//Check File Extensions, display only produced files
-					{
-						echo form_checkbox(array(
-							'name' => 'checkbox[]',
-							'id' => 'checkbox[]',
-							'value' => $file_name,
-							'checked' => FALSE
-						));
-
-						$url = site_url() . '/raw_uploads/display_file/' . $file_name;
-						echo '<a href="'.$url.'">'.$file_name.'</a><br/>';
-					}
-				}
-
+			<?php
 				echo '<br/>';
-				 
-				// <div>
-				// 	<ul>
-				// 		<li>Stemming</li><li>Tokenization</li><li>Sentence Splitting</li><li>POS Tagging</li><li>Lemmatization</li><li>Name-Entity-Recogition</li>
-				// 	</ul>
-				// </div>
-				
-				
+				echo '<br/>';
+
+				echo '<ul>';
+
 				echo '<button class="btn btn-primary" name="file_action" value="batch_preprocess"  type="submit">Preprocess</button>';
-				
+
 				echo form_dropdown('stemming',
 					array(
 						'' => 'Stemming',
@@ -146,10 +121,41 @@
 						'class' => 'preprocess',
 						'data-active' => 'false'));
 
-				for($i = 0; $i < 5; $i++){
-					echo '<br/>';
-				}
+				echo '<br/>';
+				echo '<br/>';
+
 				echo '<button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>	<button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>';
+
+				echo '<br/>';
+				echo '<br/>';
+
+				echo '<form id="checkbox_form" name="checkbox_form" method="post" action="raw_uploads/submit_files" >';
+				//echo '<form id="checkbox_form" name="checkbox_form" method="post" action="/submit_files">';
+				echo "<input type='checkbox' name='select_all' onClick='selectAll(this)' > Select All<br/>";
+				foreach($files as $file => $file_name)
+				{
+					$file_parts=pathinfo($file_name);
+					if($file_parts['extension']=="txt")//Check File Extensions, display only produced files
+					{
+						echo form_checkbox(array(
+							'name' => 'checkbox[]',
+							'id' => 'checkbox[]',
+							'value' => $file_name,
+							'checked' => FALSE
+						));
+
+						$url = site_url() . '/raw_uploads/display_file/' . $file_name;
+						echo '<a href="'.$url.'">'.$file_name.'</a><br/>';
+					}
+				}
+
+				echo '<br/>';
+
+				// <div>
+				// 	<ul>
+				// 		<li>Stemming</li><li>Tokenization</li><li>Sentence Splitting</li><li>POS Tagging</li><li>Lemmatization</li><li>Name-Entity-Recogition</li>
+				// 	</ul>
+				// </div>
 
 				echo '</form>';
 				echo '</ul>';
