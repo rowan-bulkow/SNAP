@@ -16,7 +16,7 @@
 				}
 			}
 		</script>
-		
+
 	</head>
 	<body>
 		<?php include 'navi.php'; ?>
@@ -31,11 +31,16 @@
 				<p class="current_val">Current Set Skew Z: <?php echo $this->session->userdata('skew_z'); ?></p>
 				<p class="current_val">Current Shape: <?php echo $this->session->userdata('shape'); ?></p>
 			</ul>
-			
+
 			<?php
 				echo '<ul>';
-
 				echo '<form id="checkbox_form" name="checkbox_form" method="post" action="partiview_generator/submit_files">';
+				echo '<button class="btn btn-primary" name="file_action" value="visualize" type="submit">Network Visualization</button>';
+				echo '<br/>';
+				echo '<br/>';
+				echo '<button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>	<button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>';
+				echo '<br/>';
+				echo '<br/>';
 				echo "<input type='checkbox' name='select_all' onClick='selectAll(this)' > Select All<br/>";
 				foreach($files as $file => $file_name)
 				{
@@ -82,16 +87,6 @@
 						}
 					}
 				}
-
-				echo '<button class="btn btn-primary" name="file_action" value="visualize" type="submit">Network Visualization</button>';
-
-				//echo ' <button class="btn btn-primary" name="file_action" value="kill" type="submit">Stop</button>';
-
-				echo '<br/>';
-				echo '<br/>';
-
-				echo '<button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>	<button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>';
-
 				echo '</form>';
 				echo '</ul>';
 			?>
