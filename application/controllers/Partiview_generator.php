@@ -73,6 +73,38 @@ class Partiview_generator extends CI_Controller{
 		// threejs files
 	}
 
+	public function get_colors()
+	{
+		$curr_proj = $this->projects->get_project($this->session->userdata('project_id'))->name;
+		echo file_get_contents($this->file_dir.'/partiview_generator/'
+												.$curr_proj
+												.'_meta-colors.three.txt');
+	}
+
+	public function get_layers()
+	{
+		$curr_proj = $this->projects->get_project($this->session->userdata('project_id'))->name;
+		echo file_get_contents($this->file_dir.'/partiview_generator/'
+												.$curr_proj
+												.'_layers.three.txt');
+	}
+
+	public function get_edges()
+	{
+		$curr_proj = $this->projects->get_project($this->session->userdata('project_id'))->name;
+		echo file_get_contents($this->file_dir.'/partiview_generator/'
+												.$curr_proj
+												.'_edges.three.txt');
+	}
+
+	public function get_noodles()
+	{
+		$curr_proj = $this->projects->get_project($this->session->userdata('project_id'))->name;
+		echo file_get_contents($this->file_dir.'/partiview_generator/'
+												.$curr_proj
+												.'_noodles.three.txt');
+	}
+
 	public function display_file()
 	{
 		$file = $this->uri->segment(3);
