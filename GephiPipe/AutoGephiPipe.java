@@ -95,6 +95,11 @@ public class AutoGephiPipe
         + "(([0][1-9])|([1][0-2]))[-](([0][1-9])|([1-2][0-9])|([3][0-1]))+).*";
     public static String interiorDate="-?\\d+";
 
+    public static final String CIRCULAR_STAR_LAYOUT = "0";
+    public static final String RADIAL_AXIS_LAYOUT = "1";
+    public static final String YIFAN_HU_LAYOUT = "2";
+    public static final String FORCE_ATLAS_LAYOUT = "3";
+
     // Initialize a project and a workspace
     public static void initialize()
     {
@@ -216,11 +221,11 @@ public class AutoGephiPipe
         AttributeColumn centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
 
         // Set Size by different centralities base on input
-        if(sizeNodesBy=="Betweenness")
+        if(sizeNodesBy == "Betweenness")
         {
             centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
         }
-        else if(sizeNodesBy=="Closeness")
+        else if(sizeNodesBy == "Closeness")
         {
             centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
         }
@@ -235,11 +240,11 @@ public class AutoGephiPipe
 
         sizeTransformer.setMinSize(20);
         sizeTransformer.setMaxSize(100);
-        rankingController.transform(centralityRanking,sizeTransformer);
+        rankingController.transform(centralityRanking, sizeTransformer);
         // Seperate case since not compatible with centrality column
-        if(sizeNodesBy=="Degree" )
+        if(sizeNodesBy == "Degree")
         {
-            rankingController.transform(degreeRanking,sizeTransformer);
+            rankingController.transform(degreeRanking, sizeTransformer);
         }
     }
 
@@ -262,7 +267,8 @@ public class AutoGephiPipe
         {
             modularity.execute(graphModel, attributeModel);
         }
-        catch(RuntimeException e){
+        catch(Exception e)
+        {
             e.printStackTrace();
             System.out.println("Failed Modularity Execute");
         }
@@ -519,30 +525,30 @@ public class AutoGephiPipe
         // place imported data into container
         try
         {
-            String fileName=file.getName();
+            String fileName = file.getName();
             String[] tokens = fileName.split("\\.(?=[^\\.]+$)"); // Eliminate input extension for use in output name.
-            processedFile=tokens[0]; // Used for export file name
+            processedFile = tokens[0]; // Used for export file name
             // Searches file name for a proper date and then appends the date as a time interval
             Matcher m = p.matcher(fileName);
             if (m.find())
             {
                 // Set date for this file
                 System.out.println(fileName);
-                System.out.println("Date In "+ m.group(1)+" Length: " +m.group(1).length());
-                if(isDate(m.group(1))==true)
+                System.out.println("Date In " + m.group(1) + " Length: " + m.group(1).length());
+                if(isDate(m.group(1)))
                 {
-                    dates[dateCounter]=m.group(1); // Gathers Dates of files to be printed to text file for later use
+                    dates[dateCounter] = m.group(1); // Gathers Dates of files to be printed to text file for later use
                     dateCounter++;
-                    System.out.println("File imported: " +file.toString());
+                    System.out.println("File imported: " + file.toString());
                     container = importController.importFile(file);
-                    if(container==null)
+                    if(container == null)
                     {
                         System.out.println("Container is null");
                     }
                     container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
-                    System.out.println(fileName+" was appended to graph.");
+                    System.out.println(fileName + " was appended to graph.");
                     dynamicProcessor.setDate(m.group(1)); // Set time interval
-                    System.out.println("Date Set: " +dynamicProcessor.getDate());
+                    System.out.println("Date Set: " + dynamicProcessor.getDate());
                     importController.process(container, dynamicProcessor, workspace);
                     // dates[dateCounter]=newDate; // Gathers Dates of files to be printed to text file for later use
                     // dateCounter++;
@@ -557,16 +563,16 @@ public class AutoGephiPipe
                 }
                 else
                 {
-                    System.out.println("Error, File "+processedFile+" was not appended to graph due to improper File date");
+                    System.out.println("Error, File " + processedFile + " was not appended to graph due to improper File date");
                 }
             }
             else // If the Date was not in the file name, attempt to grab date from file itself by finding the first three integers in file
             {
                 System.out.println("Invalid date in File name, searching .dl for date");
-                int count=0;
+                int count = 0;
                 try
                 {
-                    read=new Scanner(file);
+                    read = new Scanner(file);
                 }
                 catch(Exception ex)
                 {
@@ -575,63 +581,63 @@ public class AutoGephiPipe
 
                 while(read.hasNext())
                 {
-                    String temp=read.next();
-                    p=Pattern.compile(interiorDate);
-                    m=p.matcher(temp);
+                    String temp = read.next();
+                    p = Pattern.compile(interiorDate);
+                    m = p.matcher(temp);
                     if(m.find())
                     {
                         count++;
-                        if(count==1 && temp.length()==4)
+                        if(count == 1 && temp.length() == 4)
                         {
-                            year=temp;
+                            year = temp;
                         }
-                        else if(count==2)
+                        else if(count == 2)
                         {
                             // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
-                            if(temp.length()==1)
+                            if(temp.length() == 1)
                             {
-                                temp="0"+temp;
-                                month=temp;
+                                month = "0" + temp;
                             }
                             else
                             {
-                                month=temp;
+                                month = temp;
                             }
                         }
-                        else if(count==3)
+                        else if(count == 3)
                         {
                             // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
-                            if(temp.length()==1)
+                            if(temp.length() == 1)
                             {
-                                temp="0"+temp;
-                                day=temp;
+                                day = "0" + temp;
                             }
                             else
                             {
-                                day=temp;
+                                day = temp;
                             }
                             break;
                         }
                     }
                 }
-                System.out.println(year+"-"+month+"-"+day);
-                String newDate=year+"-"+month+"-"+day;
-                if(isDate(newDate)==true)
+
+                String newDate = year + "-" + month + "-" + day;
+                System.out.println(newDate);
+
+                if(isDate(newDate) == true)
                 {
-                    dates[dateCounter]=newDate; // Gathers Dates of files to be printed to text file for later use
+                    dates[dateCounter] = newDate; // Gathers Dates of files to be printed to text file for later use
                     dateCounter++;
-                    System.out.println("File imported: " +file.toString());
+                    System.out.println("File imported: " + file.toString());
                     container = importController.importFile(file);
                     container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
-                    System.out.println(fileName+" was appended to graph.");
+                    System.out.println(fileName + " was appended to graph.");
                     dynamicProcessor.setDate(newDate); // Set time interval
-                    System.out.println("Date Set: " +dynamicProcessor.getDate());
+                    System.out.println("Date Set: " + dynamicProcessor.getDate());
                     // Process the container using the DynamicProcessor
                     importController.process(container, dynamicProcessor, workspace);
                 }
                 else
                 {
-                    System.out.println("Error, File "+processedFile+" was not appended to graph due to improper File date");
+                    System.out.println("Error, File " + processedFile + " was not appended to graph due to improper File date");
                 }
             }
         }

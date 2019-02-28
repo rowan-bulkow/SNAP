@@ -23,22 +23,23 @@ public class Main
     public static void main(String[] args) throws IOException
     {
         System.out.println("AutoGephiPipe:");
-        // int individualGexfs = 1;
 
         System.out.println("Args received: ");
         for(int i=0; i < args.length; i++) {
             System.out.println(String.format("args[%d]=%s", i, args[i]));
         }
 
-        // if(args.length >= 4) {
-        //     System.err.println("Length: " + args.length);
-        //     individualGexfs = Integer.parseInt(args[3]);
-        // }
+        if(args.length != 3) {
+            System.err.println("Incorrect number of arguments (Expected 3).");
+            System.exit(1);
+        }
+
+        Path inputPath = Paths.get(args[0]);
+        String inputLayout = args[1];
+        Double inputModResolution = Double.parseDouble(args[2]);
 
         if(args.length == 3) {
-            // System.out.println("Ind dl2gexf: " + Paths.get(args[1]));
-
-            try(Stream<Path> paths = Files.walk(Paths.get(args[0]))) {
+            try(Stream<Path> paths = Files.walk(inputPath)) {
                 paths.forEach(filePath -> {
                     if(Files.isRegularFile(filePath)) {
                         System.out.println(filePath.toString());
@@ -48,7 +49,7 @@ public class Main
 
                             AutoGephiPipe.importDirectory(filePath.toString());
 
-                            AutoGephiPipe.setModResolution(Double.parseDouble( args[2]));
+                            AutoGephiPipe.setModResolution(inputModResolution);
 
                             AutoGephiPipe.setSizeNodesBy("Betweenness");
 
@@ -56,21 +57,23 @@ public class Main
 
                             AutoGephiPipe.colorByCommunity();
 
-                            if(args[1].equals("0"))
-                            {
-                                AutoGephiPipe.circularStarLayout();
-                            }
-                            else if(args[1].equals("1"))
-                            {
-                                AutoGephiPipe.radialAxLayout();
-                            }
-                            else if(args[1].equals("2"))
-                            {
-                                AutoGephiPipe.yifanHuLayout();
-                            }
-                            else if(args[1].equals("3"))
-                            {
-                                AutoGephiPipe.forceAtlasLayout();
+                            switch (inputLayout) {
+                                case AutoGephiPipe.CIRCULAR_STAR_LAYOUT:
+                                    AutoGephiPipe.circularStarLayout();
+                                    break;
+                                case AutoGephiPipe.RADIAL_AXIS_LAYOUT:
+                                    AutoGephiPipe.radialAxLayout();
+                                    break;
+                                case AutoGephiPipe.YIFAN_HU_LAYOUT:
+                                    AutoGephiPipe.yifanHuLayout();
+                                    break;
+                                case AutoGephiPipe.FORCE_ATLAS_LAYOUT:
+                                    AutoGephiPipe.forceAtlasLayout();
+                                    break;
+                                default:
+                                    System.err.println("Error: Invalid layout");
+                                    System.exit(1);
+                                    break;
                             }
 
                             AutoGephiPipe.exportGraph(filePath.toString());
