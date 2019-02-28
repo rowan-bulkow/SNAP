@@ -74,7 +74,7 @@ public class AutoGephiPipe
 {
     private static ProjectController pc;
     private static Workspace workspace;
-    private static GraphModel graphModel; 
+    private static GraphModel graphModel;
     private static AttributeModel attributeModel;
     private static ImportController importController;
     private static Graph graph;
@@ -88,56 +88,64 @@ public class AutoGephiPipe
     public static String dates[]=new String[3000];
     public static int dateCounter=0;
     public static double modResolution=0.4;
-    
-    
-    //fileDate is a regex for extracting the date of each imported file and uses it to append as TimeInterval
-    private static String fileDate="^[a-zA-Z0-9/*-]+((([0-1][0-9]{3})|([2][0][0-9]{2}))[-](([0][1-9])|([1][0-2]))[-](([0][1-9])|([1-2][0-9])|([3][0-1]))+).*";
-    public static String interiorDate="-?\\d+"; 
-    
-    public static void initialize()//Initialize a project and a workspace
+
+
+    // fileDateRegex is a regex for extracting the date of each imported file and uses it to append as TimeInterval
+    private static String fileDateRegex="^[a-zA-Z0-9/*-]+((([0-1][0-9]{3})|([2][0][0-9]{2}))[-]"
+        + "(([0][1-9])|([1][0-2]))[-](([0][1-9])|([1-2][0-9])|([3][0-1]))+).*";
+    public static String interiorDate="-?\\d+";
+
+    // Initialize a project and a workspace
+    public static void initialize()
     {
         //Project must be created to use toolkit features
         //Creating a new project creates a new workspace, Workspaces are containers of all data
         pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
         workspace = pc.getCurrentWorkspace();
-       
+
         importController = Lookup.getDefault().lookup(ImportController.class);
         graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
         attributeModel = Lookup.getDefault().lookup(AttributeController.class).getModel();
-         //Initialize the DynamicProcessor - which will append the container to the workspace
+
+        // Initialize the DynamicProcessor - which will append the container to the workspace
         dynamicProcessor = new DynamicProcessor();
-        dynamicProcessor.setDateMode(true);    //Set 'true' if you set real dates (ex: yyyy-mm-dd), it's double otherwise
-        dynamicProcessor.setLabelmatching(true);   //Set 'true' if node matching is done on labels instead of ids       
-        
+        dynamicProcessor.setDateMode(true); // Set 'true' if you set real dates (ex: yyyy-mm-dd), it's double otherwise
+        dynamicProcessor.setLabelmatching(true); // Set 'true' if node matching is done on labels instead of ids
+
         graph = graphModel.getGraph();
         graph.readUnlockAll();
     }
-    
-    public static void radialAxLayout()//--Runs Radial Axis layout, each Spire represents a separate community.
+
+    // Runs Radial Axis layout, each Spire represents a separate community
+    public static void radialAxLayout()
     {
         RadialAxisLayout radLayout = new RadialAxisLayout(null,1.0,false);
         radLayout.setGraphModel(graphModel);
         radLayout.resetPropertiesValues();
-        radLayout.setScalingWidth(1.0);      
-        //Node placement
-        ///Makes each Spar a seperate Modularity Class
+        radLayout.setScalingWidth(1.0);
+
+        // Node placement
+        // Makes each Spar a seperate Modularity Class
         radLayout.setNodePlacement(Modularity.MODULARITY_CLASS+"-Att");
-        ///Nodes are positioned in spar by these selected measures
+
+        // Nodes are positioned in spar by these selected measures
         if(sizeNodesBy=="Betweenness")
         {
-            radLayout.setSparNodePlacement(GraphDistance.BETWEENNESS+"-Att");  
+            radLayout.setSparNodePlacement(GraphDistance.BETWEENNESS+"-Att");
         }
         else if(sizeNodesBy=="Closeness")
         {
             radLayout.setSparNodePlacement(GraphDistance.CLOSENESS+"-Att");
         }
-        else if(sizeNodesBy=="Degree")//--Currently 
+        else if(sizeNodesBy=="Degree")
         {
-            try{
-                 radLayout.setSparNodePlacement(Ranking.DEGREE_RANKING+"-Att");//Currently does nothing.
+            try
+            {
+                radLayout.setSparNodePlacement(Ranking.DEGREE_RANKING+"-Att"); // Currently does nothing.
             }
-            catch(Exception e){
+            catch(Exception e)
+            {
                 e.printStackTrace();
                 return;
             }
@@ -145,9 +153,8 @@ public class AutoGephiPipe
         radLayout.setSparSpiral(true);
         radLayout.setSparOrderingDirection(Boolean.FALSE);
         radLayout.setKnockdownSpars(Boolean.FALSE);
-       
-        
-        radLayout.initAlgo();//start algorithm
+
+        radLayout.initAlgo(); // start algorithm
         for(int i=0; i<100 && radLayout.canAlgo(); i++)
         {
             radLayout.goAlgo();
@@ -156,20 +163,20 @@ public class AutoGephiPipe
     public static void circLayout()
     {
         CircleLayout circLayout=new CircleLayout(null,1.0,true);
-      //  circLayout.
         circLayout.setGraphModel(graphModel);
         circLayout.resetPropertiesValues();
         circLayout.setNodePlacementNoOverlap(Boolean.TRUE);
         //circLayout.setNodePlacement(Modularity.MODULARITY_CLASS+"-Att");
         circLayout.setNodePlacement(GraphDistance.BETWEENNESS+"-Att");
-        //circLayout.
         circLayout.initAlgo();
+
         for(int i=0; i<1000 && circLayout.canAlgo(); i++)
         {
             circLayout.goAlgo();
         }
     }
-    public static void yifanHuLayout(){
+    public static void yifanHuLayout()
+    {
         YifanHuLayout layout = new YifanHuLayout(null, new StepDisplacement(1f));
         layout.setGraphModel(graphModel);
         layout.initAlgo();
@@ -194,19 +201,21 @@ public class AutoGephiPipe
         layout.endAlgo();
     }
 
-    public static void sizeNodes()//---Resize nodes by centrality measures or degree, further categories can be added later
+    // Resize nodes by centrality measures or degree, further categories can be added later
+    public static void sizeNodes()
     {
-        //Get Centrality and then size nodes by measure
+        // Get Centrality and then size nodes by measure
         GraphDistance distance = new GraphDistance();
         distance.setDirected(true);
         distance.execute(graphModel, attributeModel);
-        //Size by Betweeness centrality
+
+        // Size by Betweeness centrality
         RankingController rankingController = Lookup.getDefault().lookup(RankingController.class);
         Ranking degreeRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, Ranking.DEGREE_RANKING);
-        //---Default to Size by Betweenness----------//
+        // Default to Size by Betweenness
         AttributeColumn centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
-        
-        //---Set Size by different centralities base on input---------//
+
+        // Set Size by different centralities base on input
         if(sizeNodesBy=="Betweenness")
         {
             centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
@@ -215,75 +224,72 @@ public class AutoGephiPipe
         {
             centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
         }
-        //---To Do, find proper input to utilize Eigenvector---//
-//        else if(sizeNodesBy=="Eigenvector")
-//        {
-//            centralityColumn = attributeModel.getNodeTable().getColumn(EIGENVECTOR);
-//        }
+        // TODO: find proper input to utilize Eigenvector
+        // else if(sizeNodesBy=="Eigenvector")
+        // {
+        //     centralityColumn = attributeModel.getNodeTable().getColumn(EIGENVECTOR);
+        // }
         Ranking centralityRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, centralityColumn.getId());
-        AbstractSizeTransformer sizeTransformer = (AbstractSizeTransformer) rankingController.getModel().getTransformer(Ranking.NODE_ELEMENT, Transformer.RENDERABLE_SIZE);
-        
+        AbstractSizeTransformer sizeTransformer = (AbstractSizeTransformer) rankingController.getModel()
+            .getTransformer(Ranking.NODE_ELEMENT, Transformer.RENDERABLE_SIZE);
+
         sizeTransformer.setMinSize(20);
         sizeTransformer.setMaxSize(100);
         rankingController.transform(centralityRanking,sizeTransformer);
-        //-----Seperate case since not compatible with centrality column----------//
+        // Seperate case since not compatible with centrality column
         if(sizeNodesBy=="Degree" )
         {
-             rankingController.transform(degreeRanking,sizeTransformer);     
-        }  
+            rankingController.transform(degreeRanking,sizeTransformer);
+        }
     }
-    
+
     public static void colorByCommunity()
     {
-        
-            ///Color by Community but running modularity measures
-            PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
-            System.out.println("Passed Partion Controller");
-             //Run modularity algorithm - community detection
-            Modularity modularity = new Modularity();
-            if(modularity!=null)
-            {
-                System.out.println("Passed New Modularity");
-            }
-            
-            modularity.setResolution(modResolution);
-            System.out.println("Passed Modularity Resolution");
-            try
-            {
-                modularity.execute(graphModel, attributeModel);
-            }
-            catch(RuntimeException e){
-                e.printStackTrace();
-                System.out.println("Failed Modularity Execute");
-                
-            }
-            
-            System.out.println("Passed Modularity Execute");
+        // Color by Community but running modularity measures
+        PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
+        System.out.println("Passed Partion Controller");
 
-            //Partition with 'modularity_class', just created by Modularity algorithm
-            AttributeColumn modColumn = attributeModel.getNodeTable().getColumn(Modularity.MODULARITY_CLASS);
-            System.out.println("Passed Modularity Column");
-            //AttributeColumn timeColumn=attributeModel.getNodeTable().
-            partition = partitionController.buildPartition(modColumn, graph);
-            System.out.println("Passed Modularity Partition");
-            System.out.println(partition.getPartsCount() + " Communities found");
-            NodeColorTransformer nodeColorTransformer2 = new NodeColorTransformer();
-            nodeColorTransformer2.randomizeColors(partition);
-            partitionController.transform(partition, nodeColorTransformer2);
-        
-        
+        // Run modularity algorithm - community detection
+        Modularity modularity = new Modularity();
+        if(modularity!=null)
+        {
+            System.out.println("Passed New Modularity");
+        }
+
+        modularity.setResolution(modResolution);
+        System.out.println("Passed Modularity Resolution");
+        try
+        {
+            modularity.execute(graphModel, attributeModel);
+        }
+        catch(RuntimeException e){
+            e.printStackTrace();
+            System.out.println("Failed Modularity Execute");
+        }
+
+        System.out.println("Passed Modularity Execute");
+
+        // Partition with 'modularity_class', just created by Modularity algorithm
+        AttributeColumn modColumn = attributeModel.getNodeTable().getColumn(Modularity.MODULARITY_CLASS);
+        System.out.println("Passed Modularity Column");
+        // AttributeColumn timeColumn=attributeModel.getNodeTable().
+        partition = partitionController.buildPartition(modColumn, graph);
+        System.out.println("Passed Modularity Partition");
+        System.out.println(partition.getPartsCount() + " Communities found");
+        NodeColorTransformer nodeColorTransformer2 = new NodeColorTransformer();
+        nodeColorTransformer2.randomizeColors(partition);
+        partitionController.transform(partition, nodeColorTransformer2);
     }
     public static void runModularity()
     {
-        ///Color by Community but running modularity measures
+        // Color by Community but running modularity measures
         PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
-         //Run modularity algorithm - community detection
+        // Run modularity algorithm - community detection
         Modularity modularity = new Modularity();
         modularity.setResolution(modResolution);
         modularity.execute(graphModel, attributeModel);
-    
     }
-    
+
     public static void circularStarLayout()
     {
         int communityCount;
@@ -296,20 +302,21 @@ public class AutoGephiPipe
             return;
         }
         FilterController filterController = Lookup.getDefault().lookup(FilterController.class);
-    
+
         NodePartitionFilter partitionFilter = new NodePartitionFilter(partition);
-        Query query2;// Queries are ran on filtered partitions
+        Query query2; // Queries are ran on filtered partitions
         GraphView view2;
-        
+
         double rankingByPercent[] = new double[communityCount];
-        
+
         int placementQuadrant[]=new int[communityCount];
-        float shifts[]={1,1,1,1,1,1,1,1,1,1,1,1};//As community's are placed in quadrants, increment these shifts as multipliers of placement
+        // As community's are placed in quadrants, increment these shifts as multipliers of placement
+        float shifts[]={1,1,1,1,1,1,1,1,1,1,1,1};
         for(int i=0; i<=communityCount-1;i++)
         {
             partitionFilter.unselectAll();
-            partitionFilter.addPart(partition.getPartFromValue(i));//Makes a community Active
-            
+            partitionFilter.addPart(partition.getPartFromValue(i)); // Makes a community Active
+
             try
             {
                 graph.readUnlockAll();
@@ -323,11 +330,11 @@ public class AutoGephiPipe
             query2 = filterController.createQuery(partitionFilter);
             view2 = filterController.filter(query2);
             graphModel.setVisibleView(view2);
-            //Assigns Partition Node Percentage to Array for sorting
+            // Assigns Partition Node Percentage to Array for sorting
             for(Node n : graphModel.getGraphVisible().getNodes())
             {
                 rankingByPercent[i]=partitionFilter.getPartition().getPart(n).getPercentage();
-            }   
+            }
         }
         //sort(rankingByPercent);
         double sortedPercent []=new double[rankingByPercent.length];
@@ -335,64 +342,71 @@ public class AutoGephiPipe
         {
             sortedPercent[i]=rankingByPercent[i];
         }
-        
-        sort(sortedPercent);//Orders from smallest to largest percentage of nodes
+
+        sort(sortedPercent); // Orders from smallest to largest percentage of nodes
         for(int i =0; i<rankingByPercent.length;i++)
         {
             for(int j=0;j<sortedPercent.length;j++)
             {
                 if(sortedPercent[j]==rankingByPercent[i])
-            //Match the percentages, and store the index, so the the indexes reflect smallest to largest
                 {
-                  //  System.out.println("Swapped "+ sortedPercent[j]+" for " + i);
+                    // Match the percentages, and store the index, so the the indexes reflect smallest to largest
+                    // System.out.println("Swapped "+ sortedPercent[j]+" for " + i);
                     sortedPercent[j]=i;
-                    break;   
+                    break;
                 }
             }
         }
         int ordering []=new int [sortedPercent.length];
-//        for(int i=0; i<sortedPercent.length;i++)// debug
-//        { 
-//            System.out.println("Sorted percent "+i+" Percentage "+sortedPercent[i]);
-//            System.out.println("Ranking By Percent Partition "+sortedPercent[i]+" Percentage " +rankingByPercent[(int)sortedPercent[i]]);
-//        }
-        for(int i=0; i<=ordering.length-1; i++)//Assign Quadrants for placement of communities
+        // for(int i=0; i<sortedPercent.length;i++) // debug
+        // {
+        //     System.out.println("Sorted percent "+i+" Percentage "+sortedPercent[i]);
+        //     System.out.println("Ranking By Percent Partition "+sortedPercent[i]+" Percentage " +rankingByPercent[(int)sortedPercent[i]]);
+        // }
+        for(int i=0; i<=ordering.length-1; i++) // Assign Quadrants for placement of communities
         {
-          //  ordering[i]=1;i++;
-            if(i<ordering.length){
+            // ordering[i]=1;i++;
+            if(i<ordering.length)
+            {
                 ordering[i]=1;i++;
             }
-            if(i<ordering.length){
+            if(i<ordering.length)
+            {
                 ordering[i]=2;i++;
             }
             if(i<ordering.length)
             {
                 ordering[i]=3;i++;
             }
-            if(i<ordering.length){
+            if(i<ordering.length)
+            {
                 ordering[i]=4;i++;
             }
-            if(i<ordering.length){
+            if(i<ordering.length)
+            {
                 ordering[i]=5;i++;
             }
             if(i<ordering.length)
             {
                 ordering[i]=6;i++;
             }
-            if(i<ordering.length){
+            if(i<ordering.length)
+            {
                 ordering[i]=7;i++;
             }
-            if(i<ordering.length){
+            if(i<ordering.length)
+            {
                 ordering[i]=8;i++;
             }
         }
-        for(int i=sortedPercent.length-1; i>=0; i--)//Array is sorted smallest to largest so iterate from largest to smallest for community placement
-        // for(int i=0; i<=sortedPercent.length-1; i++)//Array is sorted smallest to largest so iterate from largest to smallest for community placement
+
+        // Array is sorted smallest to largest so iterate from largest to smallest for community placement
+        for(int i=sortedPercent.length-1; i>=0; i--)
         {
             try
             {
                 partitionFilter.unselectAll();
-                partitionFilter.addPart(partition.getPartFromValue((int)sortedPercent[i]));//Makes a community Active
+                partitionFilter.addPart(partition.getPartFromValue((int)sortedPercent[i])); // Makes a community Active
                 //System.out.println("Node Count: "+partitionFilter.getCurrentPartition().getElementsCount());
                 //System.out.println("Node Count: "+partitionFilter.getCurrentPartition().getPartsCount());
 
@@ -402,45 +416,45 @@ public class AutoGephiPipe
                 circLayout();
                 float commCountFloat=(float)communityCount;
                 float percentage=(float) i/commCountFloat;
-               // System.out.println("Percentage: "+percentage);
+                // System.out.println("Percentage: "+percentage);
                 float placementDegree=percentage*360;
                 float placementRadians=(float) (placementDegree*3.14159265359)/180;
-                //Dependending on the ordering, nodes are shifted over so they do not overlap, 
-                //this loop increments the shift multipliers
+                // Dependending on the ordering, nodes are shifted over so they do not overlap,
+                // this loop increments the shift multipliers
                 if(ordering[i]==1)
                 {
-                       shifts[0]=shifts[0]+1;
+                    shifts[0]=shifts[0]+1;
                 }
                 else if(ordering[i]==2)
                 {
-                       shifts[1]=shifts[1]+1;
+                    shifts[1]=shifts[1]+1;
                 }
                 if(ordering[i]==3)
                 {
-                       shifts[2]=shifts[2]+1;
+                    shifts[2]=shifts[2]+1;
                 }
                 if(ordering[i]==4)
                 {
-                       shifts[3]=shifts[3]+1;
+                    shifts[3]=shifts[3]+1;
                 }
                 if(ordering[i]==5)
                 {
-                       shifts[4]=shifts[4]+1;
+                    shifts[4]=shifts[4]+1;
                 }
                 if(ordering[i]==6)
                 {
-                       shifts[5]=shifts[5]+1;
+                    shifts[5]=shifts[5]+1;
                 }
                 if(ordering[i]==7)
                 {
-                       shifts[6]=shifts[6]+1;
+                    shifts[6]=shifts[6]+1;
                 }
                 if(ordering[i]==8)
                 {
-                       shifts[7]=shifts[7]+1;
+                    shifts[7]=shifts[7]+1;
                 }
-                //Apply shifting to groups of nodes as calculated above.
-                for (Node n : graphModel.getGraphVisible().getNodes().toArray())    
+                // Apply shifting to groups of nodes as calculated above.
+                for (Node n : graphModel.getGraphVisible().getNodes().toArray())
                 {
                     if(ordering[i]==1)
                     {
@@ -477,7 +491,7 @@ public class AutoGephiPipe
                         n.getNodeData().setX((n.getNodeData().x()-1000*shifts[6]));
                         n.getNodeData().setY(n.getNodeData().y());
                     }
-                     else if(ordering[i]==8)
+                    else if(ordering[i]==8)
                     {
                         n.getNodeData().setX(n.getNodeData().x());
                         n.getNodeData().setY(n.getNodeData().y()-1000*shifts[7]);
@@ -490,76 +504,75 @@ public class AutoGephiPipe
                 return;
             }
         }
-        
-        partitionFilter.selectAll();//Make all circles of nodes reappear
-        
+
+        partitionFilter.selectAll(); // Make all circles of nodes reappear
+
         query2 = filterController.createQuery(partitionFilter);
         view2 = filterController.filter(query2);
         graphModel.setVisibleView(view2);
-
     }
-   
-    public static void importGraph(File file)//////imports graph and appends it to existing graph
+
+    // imports graph and appends it to existing graph
+    public static void importGraph(File file)
     {
-        Pattern p=Pattern.compile(fileDate);//used to extract FileDate from imported graph
-        try//place imported data into container
+        Pattern p = Pattern.compile(fileDateRegex); // used to extract FileDate from imported graph
+        // place imported data into container
+        try
         {
             String fileName=file.getName();
-            
-            
-            String[] tokens = fileName.split("\\.(?=[^\\.]+$)");///Eliminate input extension for use in output name.
-            processedFile=tokens[0];///Used for export file name
-            //Searches file name for a proper date and then appends the date as a time interval
+            String[] tokens = fileName.split("\\.(?=[^\\.]+$)"); // Eliminate input extension for use in output name.
+            processedFile=tokens[0]; // Used for export file name
+            // Searches file name for a proper date and then appends the date as a time interval
             Matcher m = p.matcher(fileName);
-            if (m.find()) 
+            if (m.find())
             {
-                //Set date for this file
+                // Set date for this file
                 System.out.println(fileName);
                 System.out.println("Date In "+ m.group(1)+" Length: " +m.group(1).length());
                 if(isDate(m.group(1))==true)
                 {
-                    dates[dateCounter]=m.group(1);//-- Gathers Dates of files to be printed to text file for later use
+                    dates[dateCounter]=m.group(1); // Gathers Dates of files to be printed to text file for later use
                     dateCounter++;
                     System.out.println("File imported: " +file.toString());
                     container = importController.importFile(file);
-                    if(container==null){
+                    if(container==null)
+                    {
                         System.out.println("Container is null");
                     }
-                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED);//set to undirected
+                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
                     System.out.println(fileName+" was appended to graph.");
-                    dynamicProcessor.setDate(m.group(1));///Set time interval
+                    dynamicProcessor.setDate(m.group(1)); // Set time interval
                     System.out.println("Date Set: " +dynamicProcessor.getDate());
                     importController.process(container, dynamicProcessor, workspace);
-                    
-//                    dates[dateCounter]=newDate;//-- Gathers Dates of files to be printed to text file for later use
-//                    dateCounter++;
-//                    System.out.println("File imported: " +file.toString());
-//                    container = importController.importFile(file);
-//                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED);//set to undirected
-//                    System.out.println(fileName+" was appended to graph.");
-//                    dynamicProcessor.setDate(newDate);///Set time interval
-//                    System.out.println("Date Set: " +dynamicProcessor.getDate());
-//                    //Process the container using the DynamicProcessor
-//                    importController.process(container, dynamicProcessor, workspace);
+                    // dates[dateCounter]=newDate; // Gathers Dates of files to be printed to text file for later use
+                    // dateCounter++;
+                    // System.out.println("File imported: " +file.toString());
+                    // container = importController.importFile(file);
+                    // container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
+                    // System.out.println(fileName+" was appended to graph.");
+                    // dynamicProcessor.setDate(newDate); // Set time interval
+                    // System.out.println("Date Set: " +dynamicProcessor.getDate());
+                    // // Process the container using the DynamicProcessor
+                    // importController.process(container, dynamicProcessor, workspace);
                 }
                 else
                 {
                     System.out.println("Error, File "+processedFile+" was not appended to graph due to improper File date");
                 }
             }
-            else//If the Date was not in the file name, attempt to grab date from file itself by findiing the first three integers in file
+            else // If the Date was not in the file name, attempt to grab date from file itself by finding the first three integers in file
             {
                 System.out.println("Invalid date in File name, searching .dl for date");
                 int count=0;
                 try
-		{
-			read=new Scanner(file);
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-			
-		}
+                {
+                    read=new Scanner(file);
+                }
+                catch(Exception ex)
+                {
+                    ex.printStackTrace();
+                }
+
                 while(read.hasNext())
                 {
                     String temp=read.next();
@@ -574,102 +587,100 @@ public class AutoGephiPipe
                         }
                         else if(count==2)
                         {
-                            if(temp.length()==1)//if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
+                            // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
+                            if(temp.length()==1)
                             {
                                 temp="0"+temp;
-                                month=temp;  
+                                month=temp;
                             }
                             else
                             {
-                                month=temp;  
-                            } 
+                                month=temp;
+                            }
                         }
                         else if(count==3)
                         {
-                            if(temp.length()==1)//if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
+                            // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
+                            if(temp.length()==1)
                             {
                                 temp="0"+temp;
-                                day=temp; 
+                                day=temp;
                             }
                             else
                             {
                                 day=temp;
                             }
                             break;
-                        }  
-                    }  
+                        }
+                    }
                 }
                 System.out.println(year+"-"+month+"-"+day);
                 String newDate=year+"-"+month+"-"+day;
                 if(isDate(newDate)==true)
                 {
-                    
-                    dates[dateCounter]=newDate;//-- Gathers Dates of files to be printed to text file for later use
+                    dates[dateCounter]=newDate; // Gathers Dates of files to be printed to text file for later use
                     dateCounter++;
                     System.out.println("File imported: " +file.toString());
                     container = importController.importFile(file);
-                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED);//set to undirected
+                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
                     System.out.println(fileName+" was appended to graph.");
-                    dynamicProcessor.setDate(newDate);///Set time interval
+                    dynamicProcessor.setDate(newDate); // Set time interval
                     System.out.println("Date Set: " +dynamicProcessor.getDate());
-                    //Process the container using the DynamicProcessor
+                    // Process the container using the DynamicProcessor
                     importController.process(container, dynamicProcessor, workspace);
-                    
                 }
                 else
                 {
                     System.out.println("Error, File "+processedFile+" was not appended to graph due to improper File date");
-                }    
-            }   
+                }
+            }
         }
         catch(Exception ex)
         {
             ex.printStackTrace();
-            
         }
-        
     }
-     
-    public static void importDirectory(String dirName)//Takes in an entire Directory of files and attempts to import each one of them,
-            //If the import file is determined to not be a directory, a simple single file import is called.
+
+    // Takes in an entire Directory of files and attempts to import each one of them,
+    // if the import file is determined to not be a directory, a simple single file import is called.
+    public static void importDirectory(String dirName)
     {
-     
-        File tempFile=new File(dirName);
-        if(tempFile.isDirectory()==true)
+        File tempFile = new File(dirName);
+        if(tempFile.isDirectory())
         {
             File[] files = new File(dirName).listFiles();
-            System.out.println(dirName);
+            System.out.println("Processing directory: " + dirName);
 
-            for (int i = 0; i <= files.length - 1; i++) {
-                try 
+            for (int i = 0; i <= files.length - 1; i++)
+            {
+                try
                 {
                     importGraph(files[i]);
-                } 
-                catch (Exception e) 
+                }
+                catch (Exception e)
                 {
                     System.out.println(files[i].toString() + " is not a graph file");
                 }
             }
-            
         }
-        else if(tempFile.isFile()==true)
+        else if(tempFile.isFile())
         {
-            System.out.println("Single File ");
+            System.out.println("Processing Single File: " + dirName);
             try
             {
                 importGraph(tempFile);
             }
-            catch(Exception e){
+            catch(Exception e)
+            {
                 e.printStackTrace();
             }
         }
-        
-    }   
-  
-    public static void exportGraph(String dirName)//--- Exports a gexf file to be used in Gephi or Partiview, exports PDF for easy sample readability of entire graph.
+    }
+
+    // Exports a gexf file to be used in Gephi or Partiview, exports PDF for easy sample readability of entire graph.
+    public static void exportGraph(String dirName)
     {
-        
-        //Set 'show labels' option in Preview - and disable node size influence on text size
+        // Set 'show labels' option in Preview - and disable node size influence on text size
         PreviewModel previewModel = Lookup.getDefault().lookup(PreviewController.class).getModel();
         previewModel.getProperties().putValue(PreviewProperty.SHOW_NODE_LABELS, Boolean.TRUE);
         previewModel.getProperties().putValue(PreviewProperty.NODE_LABEL_PROPORTIONAL_SIZE, Boolean.FALSE);
@@ -678,31 +689,32 @@ public class AutoGephiPipe
         try
         {
             Path path = ((Paths.get(dirName)).getParent()).getParent(); 
-            //System.out.println("writeGraphOut " + path.toString()); // processedFile +" "
-            //ec.exportFile(new File("completeLayout.gexf"));
-            ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".pdf")); 
+            // System.out.println("writeGraphOut " + path.toString()); // processedFile +" "
+            // ec.exportFile(new File("completeLayout.gexf"));
+            ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".pdf"));
             ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".gexf"));
-            //ec.exportFile(new File(processedFile+".pdf"));
-        } 
-        catch (IOException ex) 
+            // ec.exportFile(new File(processedFile+".pdf"));
+        }
+        catch (IOException ex)
         {
             ex.printStackTrace();
             return;
         }
     }
-    
-    public static void exportDates()//----Exports the discrete date of each file in a .txt file to be utilized later in Partiview
-            //to discretize time intervals.
+
+    // Exports the discrete date of each file in a .txt file to be utilized later in Partiview
+    // to discretize time intervals.
+    public static void exportDates()
     {
         try
         {
-            PrintWriter pr = new PrintWriter("FileDates.txt");    
+            PrintWriter pr = new PrintWriter("FileDates.txt");
 
-            for (int i=0; i<dates.length ; i++)
+            for (int i=0; i<dates.length; i++)
             {
                 if(dates[i]!= null)
                 {
-                     pr.println(dates[i]);
+                    pr.println(dates[i]);
                 }
             }
             pr.close();
@@ -711,8 +723,9 @@ public class AutoGephiPipe
         {
             e.printStackTrace();
             System.out.println("No such file exists.");
-        }   
+        }
     }
+
     public static boolean isDate(String dateIn)
     {
         boolean isDate;
@@ -723,39 +736,42 @@ public class AutoGephiPipe
         String hyphen2;
         try
         {
-
             year = Integer.parseInt(dateIn.substring(0,4));
-            if(year<=0 ||year >2050){
+            if(year<=0 || year >2050)
+            {
                 System.out.println("No way a file has been created with that date yet");
-                return isDate= false;
+                return isDate = false;
             }
             hyphen1=dateIn.substring(4,5);
             month = Integer.parseInt(dateIn.substring(5, 7));
-            if(month<=0 ||month >12){
+            if(month<=0 || month >12)
+            {
                 System.out.println("Not a Month");
-                return isDate= false;
+                return isDate = false;
             }
             hyphen2=dateIn.substring(7,8);
             day = Integer.parseInt(dateIn.substring(8, 10));
-            if(day<=0 ||day >31){
+            if(day<=0 || day >31)
+            {
                 System.out.println("Out of range of days in months");
-                return isDate= false;
+                return isDate = false;
             }
-            isDate=true;
+            isDate = true;
         }
         catch(Exception e)
         {
-            isDate= false;
-        }   
+            isDate = false;
+        }
         return isDate;
     }
-    
-    public static String getSizeNodesBy(){
+
+    public static String getSizeNodesBy()
+    {
         return sizeNodesBy;
     }
     public static void setSizeNodesBy(String size)
     {
-        sizeNodesBy=size;
+        sizeNodesBy = size;
     }
     public static double getModResolution()
     {
@@ -767,10 +783,9 @@ public class AutoGephiPipe
         {
             modResolution=resIn;
         }
-        else//reset to default
+        else // reset to default
         {
             modResolution=0.4;
         }
     }
-    
 }

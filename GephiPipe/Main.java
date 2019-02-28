@@ -15,28 +15,35 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-public class Main 
+public class Main
 {
-    
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException 
+    public static void main(String[] args) throws IOException
     {
         System.out.println("AutoGephiPipe:");
-        int individualGexfs = 1;
-        if(args.length >= 4){
-            System.err.println("Length: "+args.length);
-            individualGexfs = Integer.parseInt(args[3]);
+        // int individualGexfs = 1;
+
+        System.out.println("Args received: ");
+        for(int i=0; i < args.length; i++) {
+            System.out.println(String.format("args[%d]=%s", i, args[i]));
         }
-        if(individualGexfs == 1){
-            System.out.println("Ind dl2gexf: "+Paths.get(args[1]));
-            try(Stream<Path> paths = Files.walk(Paths.get(args[0]))){
-                System.out.println("AFSF");
+
+        // if(args.length >= 4) {
+        //     System.err.println("Length: " + args.length);
+        //     individualGexfs = Integer.parseInt(args[3]);
+        // }
+
+        if(args.length == 3) {
+            // System.out.println("Ind dl2gexf: " + Paths.get(args[1]));
+
+            try(Stream<Path> paths = Files.walk(Paths.get(args[0]))) {
                 paths.forEach(filePath -> {
-                    if(Files.isRegularFile(filePath)){
+                    if(Files.isRegularFile(filePath)) {
                         System.out.println(filePath.toString());
-                        if(filePath.toString().endsWith(".dl")){
+
+                        if(filePath.toString().endsWith(".dl")) {
                             AutoGephiPipe.initialize();
 
                             AutoGephiPipe.importDirectory(filePath.toString());
@@ -71,9 +78,11 @@ public class Main
                         }
                     }
                 });
+            } catch(Exception e) {
+                System.err.println("Error processing dl files.");
             }
+        } else {
+            System.err.println("Incorrect number of arguments (Expected 3).");
         }
     }
-    
-    
 }
