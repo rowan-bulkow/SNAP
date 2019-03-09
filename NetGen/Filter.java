@@ -150,12 +150,14 @@ public class Filter {
 
     	// retrieve a count of the number of times each token is seen
     	// as well as a min count, and a max count
-    	int minCount = 1;
+    	int minCount = 0x7fffffff;
     	int maxCount = 0;
+        int numWords = 0;
     	for(ArrayList<String> sentence: sentences) {
 	        for(String s : sentence) {
         		hm.put(s, hm.getOrDefault(s, 0)+1);
         		int currCount = hm.get(s);
+                numWords +=1;
         		if(currCount < minCount)
         			minCount = currCount;
         		else if(currCount > maxCount)
@@ -172,7 +174,7 @@ public class Filter {
     	}
 
     	// remove those tokens outside the min and max bounds
-        removeMinMaxHm(lhm, min, max, minCount, maxCount);
+        removeMinMaxHm(lhm, min, max, minCount, maxCount,numWords);
         return hmToArrayList(lhm);
     }
 
@@ -196,7 +198,7 @@ public class Filter {
     	ArrayList<ArrayList<String>> sentences = new ArrayList<ArrayList<String>>();
 		ArrayList<String> sentence = new ArrayList<String>();
     	for(String s: tokens){
-    		if(s.equals(".")){
+    		if(s.equals("#/#")){
     			ArrayList<String> temp = (ArrayList<String>) sentence.clone();
     			sentences.add(temp);
     			sentence.clear();
@@ -209,14 +211,21 @@ public class Filter {
 		return sentences;
     }
 
-    // Removes the frequecies from the hash map that are not within the min max threshhold
-    private static void removeMinMaxHm(HashMap<String, Integer> hm, double min, double max, int minCount, int maxCount) {
+    // Normalize the counts w/ respect to the article length
+    // Remove the frequecies from the hash map that are not within the min max threshhold
+    private static void removeMinMaxHm(HashMap<String, Integer> hm, double min, double max, int minCount, int maxCount, int numWords) {
     	Iterator<Map.Entry<String, Integer>> i = hm.entrySet().iterator();
     	int tokenCount = 0, removeCount = 0;
 
+        // System.out.println("Min: "+min+" Max: "+max+" minCount: "+minCount+" maxCount: "+maxCount);
+        // min /= (double)maxCount;
+        // max /= (double)maxCount;
+        // System.out.println("Min: "+min+" Max: "+max+" minCount: "+minCount+" maxCount: "+maxCount);
+
     	while(i.hasNext()) {
     		Map.Entry<String, Integer> m = i.next();
-			double normalCount = ((double)m.getValue() - minCount) / (maxCount - minCount);
+			double normalCount = (double)m.getValue() / maxCount; //minCount is always 1 so don't do: ((double)m.getValue() - minCount / ((double) maxCount - minCount); 
+            double freqValue = m.getValue();
 			if(normalCount < min || normalCount > max) {
 				//System.out.println("Removing:\ttoken="+m.getKey()+"\trawCount="+m.getValue()+" minCount="+minCount+" maxCount="+maxCount+" normalCount="+normalCount);
 				i.remove();

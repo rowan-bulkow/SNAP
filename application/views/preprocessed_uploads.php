@@ -7,7 +7,7 @@
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <link rel="stylesheet" href="<?php echo asset_url(); ?>css/menuStyle.css" type="text/css" />
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-        <link rel='stylesheet' type='text/css' href='//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
+        <!-- <link rel='stylesheet' type='text/css' href='//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'> -->
 
 
     <link rel="stylesheet" href=<?php echo style_url() . 'preprocessed_uploads.css'; ?> type="text/css" />
@@ -84,16 +84,29 @@
                             console.log(frequencies.length)
                             console.log(frequencies.map(normalize(frequencies[0], frequencies[frequencies.length - 1])))
                             var normalizedValues = frequencies.map(normalize(frequencies[0], frequencies[frequencies.length - 1]))
+                            //var normalizedValues = normalizedValues.map(x=>Math.log(x))
                             if(normalizedValues.length > 0 || normalizedValues != undefined)
                             {
                                 var trace = {
-                                x: normalizedValues,
-                                //histnorm: 'probability',
-                                type: 'histogram'//,
-                                //cumulative: {enabled: true}
+                                    x: normalizedValues,
+                                    //histnorm: 'probability',
+                                    type: 'histogram'//,
+                                    //cumulative: {enabled: true}
+                                };
+                                var layout = {
+                                    title: 'Plot of word freqiencies in selected files',
+                                    xaxis: {
+                                       title: 'word frequency (bins)',
+                                       showgrid: false,
+                                       zeroline: false
+                                    },
+                                    yaxis: {
+                                       title: 'word count (of given frequency)',
+                                       showline: false
+                                    }
                                 };
                                 var data = [trace];
-                                Plotly.newPlot('HistogramGraph', data);
+                                Plotly.newPlot('HistogramGraph', data, layout);
                             }
 
                                 $("#loader").hide();
@@ -168,7 +181,12 @@
         <H3>Network Generation</H3>
         <p>
             This page takes the .txt processed by the provided Natural Language Processing toolkits
-            and generates Undirected Graph Data Structure .dl files representing the network of words in processed files.
+            and generates Undirected Graph Data Structure .dl files representing the network of words in each processed file.
+            The graph is created by lexical chaning.
+        </p>
+        <p>
+            To take out the guessing game of what is the word distribution in the articles, please use the "Generate Histogram" at the bottom
+            of the page to help you decide what filter values should you use to keep the right words and delete the meaningless words.
         </p>
         <ul>
             <p class="current_val">
@@ -182,17 +200,32 @@
                     }
                 ?>
             </p>
-            <p class="current_val">Current Set Frequency Threshold Lower Bound: <?php echo $this->session->userdata('freq_lower_bound'); ?></p>
-            <p class="current_val">Current Set Frequency Threshold Upper Bound: <?php echo $this->session->userdata('freq_upper_bound'); ?></p>
+            <p class="current_val">Current High Word Frequency Threshold Bound: <?php echo $this->session->userdata('freq_upper_bound'); ?>
+            </p>
+            <p class="current_val">Current Low Word Frequency Threshold Bound: <?php echo $this->session->userdata('freq_lower_bound'); ?>
+            </p>
+            <p class="current_val">Current Lexical Chaning Window Width: <?php echo $this->session->userdata('sliding_window'); ?>
+            </p>
         </ul>
 
         <div class="pull-right" id="HistogramGraph"></div>
         <div class="hidden" id="loader"></div>
 
+        <button class="btn btn-primary" data-toggle="tooltip" title="Generates Histogram based on selected files!"
+            id="histogramGeneration" name="file_action" value="HistoGram" type="button">
+            Generate Histogram
+        </button>
+        <button class="btn btn-primary" data-toggle="tooltip" title="Network Generation" id="NetGenButton" name="file_action" value="netgen2" type="button">Network Generation</button>
+        <br/>
+        <button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>
+        <button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>
+
         <form id="checkbox_form" name="checkbox_form" method="post" action="preprocessed_uploads/submit_files">
             <input type='checkbox' name='select_all' onClick='selectAll(this)' > Select All<br/>
+            <table><tr><td></td><td>File name</td><td>Time Stamp</td><td>Size</td></tr>
             <?php
-                foreach ($files as $file => $file_name) {
+              foreach ($files as $file => $file_name) {
+                    echo '<tr><td>';
                     $file_parts = pathinfo($file_name);
                     if ($file_parts['extension'] == "txt") //Check File Extensions, display only produced files
                     {
@@ -203,20 +236,15 @@
                             'checked' => FALSE,
                         );
                         echo form_checkbox($data);
-
                         $url = site_url() . '/preprocessed_uploads/display_file/' . $file_name;
-                        echo '<a href="' . $url . '">' . $file_name . '</a><br/>';
+                        $file_stat = stat($this->file_dir.'/preprocessed/'.$file_name);
+                        echo '</td><td><a href="' . $url . '">' . $file_name . '</a> | </td><td>'.date("F d Y H:i:s.",$file_stat['mtime']).' | </td><td>'.round(pow(1024, ((log($file_stat['size']) / log(1024)) - floor(log($file_stat['size']) / log(1024)))),2).array("", "k", "M", "G", "T")[floor(log($file_stat['size']) / log(1024))].'</td></tr>';
                     }
                 }
             ?>
-            <button class="btn btn-primary" data-toggle="tooltip" title="Generates Histogram based on selected files!"
-                id="histogramGeneration" name="file_action" value="HistoGram" type="button">
-                Generate Histogram
-            </button>
-            <button class="btn btn-primary" data-toggle="tooltip" title="Generate Semantic Networks" id="NetGenButton" name="file_action" value="netgen2" type="button">Network Generation</button>
-
-            <button class="btn btn-danger" name="file_action" value="delete" type="submit">Delete</button>
-            <button class="btn btn-primary" name="file_action" value="download" type="submit">Download</button>
+            </table>
+            <br/>
+            
         </form>
     </div>
 </body>

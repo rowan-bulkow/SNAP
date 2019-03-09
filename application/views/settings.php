@@ -50,20 +50,14 @@
             <form id="settings" name="settings" method="post" action="settings/save_settings">
                 <ul>
                     <li>
-                        If Use Frequency is set, then frequency of word usage is used to create the network in place of position.
-                        Frequency is the inverse usage of a word and is determined by 1/n where n is equal to word usage.
-                        So if a word is used 2 times it will have a frequency of 1/2 or 50%, for a word used 4 times it will
-                        have a frequency of 1/4 or 25%.
+                        If "Use Frequency" is set, then words are filtered based on how frequently they are used in each article. 
+                        You can set the word frequencies to filter unwanted words using the high and lower frequency bounds below. The high word frequency bound will delete any words that occur in the article with a frequencies greater than the upper bound percentile. To remove the low frequency words set the lower percentile bound, and the words that are in each article with the frequencies in the lower bound percentile will be deleted. The most frequently used word will be in the top percentile (or = 1).
                     </li>
                     <li>
-                        The Frequency Upper Bound is the maximum value a frequency should have.
-                        When set to 5 (5%) a word used more than 20 times will be removed from the network.
-                        Default set to 5 (5%).
+                        For example: To remove all words that are in the article more than 20 time, set the upper frequency percentile bound. Similarly, to remove all words that are in the article fewer than 5 times, set the lower frequency percentile bound.
                     </li>
                     <li>
-                        The Frequency Lower Bound is the minimum value a frequency should have.
-                        When set to 25 (25%) a word used less than 4 times will be removed from the network.
-                        Default set to 35 (35%).
+                        The sliding window sets the lexical chaning window width. All tokens within this windows will be fully connected. The window width has to be greater between 2 and 5. 
                     </li>
                 </ul>
                 <input type="checkbox" name="useFreq"
@@ -71,11 +65,11 @@
                         $use_freq = $this->session->userdata('use_freq');
                         if ($use_freq == 1) {echo "checked";}
                     ?>
-                /> Use Frequency
+                /> Use Frequency Percentiles for word removal.
                 <br />
                 <br />
                 <p class="current_val">
-                    Current Use Frequency Setting:
+                    Current Frequency Removal Setting:
                     <?php
                         $use_freq = $this->session->userdata('use_freq');
                         if ($use_freq == 1) {
@@ -86,22 +80,32 @@
                     ?>
                 </p>
 
-                <p>Enter a number greater than 0 and less than the Lower bound </p>
+                <p>High word frequency percentile bound: Enter a number greater than 0 and less than the lower bound</p>
                 <input
-                    type="number" min="0" name="freq_upper" 
+                    type="number" step="0.01" max="1" name="freq_upper" 
                     value=<?php echo $this->session->userdata('freq_upper_bound'); ?>
                 />
-                Frequency Threshold Upper Bound 
-                <p class="current_val">Current Set Upper Bound: <?php echo $this->session->userdata('freq_upper_bound'); ?></p>
+                High Word Frequency Percentile Threshold 
+                <p class="current_val">Current High Word Frequency Percentile Bound: <?php echo $this->session->userdata('freq_upper_bound'); ?></p>
                 <br />
                 <br />
-                <p>Enter a number greater than the Upper bound and less than or equal to 100 </p>
+                <p>Low word frequency percentile bound: Enter a number greater than the Upper Word Frequency Percentile Bound and less than or equal to 1 </p>
                 <input
-                    type="number" max="100" name="freq_lower"
+                    type="number" step="0.01" min="0" name="freq_lower"
                     value=<?php echo $this->session->userdata('freq_lower_bound'); ?>
                 />
-                Frequency Threshold Lower Bound
-                <p class="current_val">Current Set Lower Bound: <?php echo $this->session->userdata('freq_lower_bound'); ?></p>
+                Low Word Frequency Percentile Threshold
+                <p class="current_val">Current Low Word Frequency Percentile Bound: <?php echo $this->session->userdata('freq_lower_bound'); ?></p>
+
+                <br />
+                <br />
+                <p>Enter the lexical chaining window width between 2 and 5 </p>
+                <input
+                    type="number" step="1" min="2" max="5" name="sliding_window"
+                    value=<?php echo $this->session->userdata('sliding_window'); ?>
+                />
+                Lexical Chaining Window Width
+                <p class="current_val">Current Window Width: <?php echo $this->session->userdata('sliding_window'); ?></p>
 
                 <button class="btn btn-primary" name="file_action" value="net_gen_set" type="submit">Save</button>
             </form>
@@ -134,7 +138,7 @@
                 </p>
                 <br />
                 <input
-                    type="number" step="0.0001" min="0.0001" max="1"
+                    type="number" step="0.01" min="0.01" max="1"
                     value="<?php echo $this->session->userdata('mod_resolution'); ?>"
                     name="mod_resolution" id="mod_resolution"
                 />

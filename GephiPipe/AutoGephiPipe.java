@@ -6,7 +6,7 @@
 // Contributions from: 
 // Eric Pak, Levi Oyster, Boyd Ching, Rowan Bulkow, Neal Logan, Mackenzie Bartlett
 //
-//package AutoGephi;
+
 import java.util.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,6 +26,7 @@ import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.GraphModel;
 import org.gephi.graph.api.UndirectedGraph;
+//import org.gephi.graph.api.DirectedGraph;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.io.importer.api.Container;
 import org.gephi.io.importer.api.EdgeDefault;
@@ -211,7 +212,7 @@ public class AutoGephiPipe
     {
         // Get Centrality and then size nodes by measure
         GraphDistance distance = new GraphDistance();
-        distance.setDirected(true);
+        distance.setDirected(false);
         distance.execute(graphModel, attributeModel);
 
         // Size by Betweeness centrality
@@ -286,6 +287,7 @@ public class AutoGephiPipe
         nodeColorTransformer2.randomizeColors(partition);
         partitionController.transform(partition, nodeColorTransformer2);
     }
+    // UNused should be deleted!
     public static void runModularity()
     {
         // Color by Community but running modularity measures
