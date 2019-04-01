@@ -17,10 +17,14 @@ import java.nio.file.Paths;
 import static java.util.Arrays.sort;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.gephi.data.attributes.api.AttributeColumn;
-import org.gephi.data.attributes.api.AttributeController;
-import org.gephi.data.attributes.api.AttributeModel;
-import org.gephi.dynamic.api.DynamicController;
+import java.util.concurrent.CountDownLatch;
+
+import org.gephi.appearance.api.AppearanceController;
+import org.gephi.appearance.api.AppearanceModel;
+// import org.gephi.datalab.api.AttributeColumn;
+// import org.gephi.datalab.api.AttributeController;
+// import org.gephi.datalab.api.AttributeModel;
+// import org.gephi.dynamic.api.DynamicController;
 import org.gephi.filters.api.FilterController;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphController;
@@ -29,30 +33,27 @@ import org.gephi.graph.api.UndirectedGraph;
 //import org.gephi.graph.api.DirectedGraph;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.io.importer.api.Container;
-import org.gephi.io.importer.api.EdgeDefault;
+// import org.gephi.io.importer.api.EdgeDefault;
 import org.gephi.io.importer.api.ImportController;
 import org.gephi.io.processor.plugin.DefaultProcessor;
-import org.gephi.io.processor.plugin.DynamicProcessor;
+// import org.gephi.io.processor.plugin.DynamicProcessor;
 import org.gephi.layout.plugin.circularlayout.circlelayout.CircleLayout;
 import org.gephi.layout.plugin.circularlayout.radialaxislayout.RadialAxisLayout;
-import org.gephi.partition.api.Partition;
-import org.gephi.partition.api.PartitionController;
-import org.gephi.partition.plugin.NodeColorTransformer;
+// import org.gephi.partition.api.Partition;
+// import org.gephi.partition.api.PartitionController;
+// import org.gephi.partition.plugin.NodeColorTransformer;
 import org.gephi.preview.api.PreviewController;
 import org.gephi.preview.api.PreviewModel;
 import org.gephi.preview.api.PreviewProperty;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
-import org.gephi.ranking.api.Ranking;
-import org.gephi.ranking.api.RankingController;
-import org.gephi.ranking.api.Transformer;
-import org.gephi.ranking.plugin.transformer.AbstractColorTransformer;
-import org.gephi.ranking.plugin.transformer.AbstractSizeTransformer;
+// import org.gephi.ranking.api.Ranking;
+// import org.gephi.ranking.api.RankingController;
+// import org.gephi.ranking.api.Transformer;
+// import org.gephi.ranking.plugin.transformer.AbstractColorTransformer;
+// import org.gephi.ranking.plugin.transformer.AbstractSizeTransformer;
 import org.gephi.statistics.plugin.GraphDistance;
 import org.gephi.statistics.plugin.Modularity;
-import org.openide.util.Lookup;
-import org.openide.util.Utilities;
-
 import org.gephi.filters.api.Query;
 import org.gephi.filters.api.Range;
 import org.gephi.filters.plugin.graph.DegreeRangeBuilder.DegreeRangeFilter;
@@ -61,11 +62,12 @@ import org.gephi.filters.plugin.operator.INTERSECTIONBuilder.IntersectionOperato
 import org.gephi.filters.plugin.partition.PartitionBuilder.NodePartitionFilter;
 import org.gephi.graph.api.GraphView;
 import org.gephi.graph.api.Node;
-import java.util.concurrent.CountDownLatch;
-
 import org.gephi.layout.plugin.force.yifanHu.YifanHuLayout;
 import org.gephi.layout.plugin.force.StepDisplacement;
 import org.gephi.layout.plugin.forceAtlas.ForceAtlasLayout;
+
+import org.openide.util.Lookup;
+import org.openide.util.Utilities;
 
 /**
  *
@@ -76,8 +78,11 @@ public class AutoGephiPipe
     private static ProjectController pc;
     private static Workspace workspace;
     private static GraphModel graphModel;
-    private static AttributeModel attributeModel;
+    // private static AttributeModel attributeModel;
     private static ImportController importController;
+    private static AppearanceController appearanceController;
+    private static AppearanceModel appearanceModel;
+
     private static Graph graph;
     private static String processedFile;
     private static DynamicProcessor dynamicProcessor;
@@ -86,15 +91,15 @@ public class AutoGephiPipe
     public static Scanner read;
     public static String year, month,day;
     public static String sizeNodesBy;
-    public static String dates[]=new String[3000];
-    public static int dateCounter=0;
-    public static double modResolution=0.4;
+    public static String dates[] = new String[3000];
+    public static int dateCounter = 0;
+    public static double modResolution = 0.4;
 
 
     // fileDateRegex is a regex for extracting the date of each imported file and uses it to append as TimeInterval
-    private static String fileDateRegex="^[a-zA-Z0-9/*-]+((([0-1][0-9]{3})|([2][0][0-9]{2}))[-]"
+    private static String fileDateRegex = "^[a-zA-Z0-9/*-]+((([0-1][0-9]{3})|([2][0][0-9]{2}))[-]"
         + "(([0][1-9])|([1][0-2]))[-](([0][1-9])|([1-2][0-9])|([3][0-1]))+).*";
-    public static String interiorDate="-?\\d+";
+    public static String interiorDate = "-?\\d+";
 
     public static final String CIRCULAR_STAR_LAYOUT = "0";
     public static final String RADIAL_AXIS_LAYOUT = "1";
@@ -104,15 +109,17 @@ public class AutoGephiPipe
     // Initialize a project and a workspace
     public static void initialize()
     {
-        //Project must be created to use toolkit features
-        //Creating a new project creates a new workspace, Workspaces are containers of all data
+        // Project must be created to use toolkit features
+        // Creating a new project creates a new workspace, Workspaces are containers of all data
         pc = Lookup.getDefault().lookup(ProjectController.class);
         pc.newProject();
         workspace = pc.getCurrentWorkspace();
 
         importController = Lookup.getDefault().lookup(ImportController.class);
-        graphModel = Lookup.getDefault().lookup(GraphController.class).getModel();
-        attributeModel = Lookup.getDefault().lookup(AttributeController.class).getModel();
+        graphModel = Lookup.getDefault().lookup(GraphController.class).getGraphModel();
+        appearanceController = Lookup.getDefault().lookup(AppearanceController.class);
+        appearanceModel = appearanceController.getModel();
+        // attributeModel = Lookup.getDefault().lookup(AttributeController.class).getModel();
 
         // Initialize the DynamicProcessor - which will append the container to the workspace
         dynamicProcessor = new DynamicProcessor();
@@ -213,7 +220,7 @@ public class AutoGephiPipe
         // Get Centrality and then size nodes by measure
         GraphDistance distance = new GraphDistance();
         distance.setDirected(false);
-        distance.execute(graphModel, attributeModel);
+        distance.execute(graphModel);
 
         // Size by Betweeness centrality
         RankingController rankingController = Lookup.getDefault().lookup(RankingController.class);
@@ -235,6 +242,7 @@ public class AutoGephiPipe
         // {
         //     centralityColumn = attributeModel.getNodeTable().getColumn(EIGENVECTOR);
         // }
+
         Ranking centralityRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, centralityColumn.getId());
         AbstractSizeTransformer sizeTransformer = (AbstractSizeTransformer) rankingController.getModel()
             .getTransformer(Ranking.NODE_ELEMENT, Transformer.RENDERABLE_SIZE);
