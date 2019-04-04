@@ -33,6 +33,7 @@ import org.gephi.graph.api.UndirectedGraph;
 //import org.gephi.graph.api.DirectedGraph;
 import org.gephi.io.exporter.api.ExportController;
 import org.gephi.io.importer.api.Container;
+import org.gephi.io.importer.api.EdgeDirectionDefault;
 // import org.gephi.io.importer.api.EdgeDefault;
 import org.gephi.io.importer.api.ImportController;
 import org.gephi.io.processor.plugin.DefaultProcessor;
@@ -84,10 +85,10 @@ public class AutoGephiPipe
     private static AppearanceModel appearanceModel;
 
     private static Graph graph;
-    private static String processedFile;
-    private static DynamicProcessor dynamicProcessor;
-    private static Partition partition;
-    private static Container container;
+    // private static String processedFile;
+    // private static DynamicProcessor dynamicProcessor;
+    // private static Partition partition;
+    // private static Container container;
     public static Scanner read;
     public static String year, month,day;
     public static String sizeNodesBy;
@@ -95,11 +96,13 @@ public class AutoGephiPipe
     public static int dateCounter = 0;
     public static double modResolution = 0.4;
 
-
-    // fileDateRegex is a regex for extracting the date of each imported file and uses it to append as TimeInterval
-    private static String fileDateRegex = "^[a-zA-Z0-9/*-]+((([0-1][0-9]{3})|([2][0][0-9]{2}))[-]"
+    private static String badfileDateRegex = "^[a-zA-Z0-9/*-]+((([0-1][0-9]{3})|([2][0][0-9]{2}))[-]"
         + "(([0][1-9])|([1][0-2]))[-](([0][1-9])|([1-2][0-9])|([3][0-1]))+).*";
-    public static String interiorDate = "-?\\d+";
+    private static String fileDateRegex = "[0-9]{4}[-][0-9]{2}[-][0-9]{2}";
+    private static Pattern fileDatePattern = Pattern.compile(fileDateRegex);
+
+    private static String interiorDateRegex = "-?\\d+";
+    private static Pattern interiorDatePattern = Pattern.compile(interiorDateRegex);
 
     public static final String CIRCULAR_STAR_LAYOUT = "0";
     public static final String RADIAL_AXIS_LAYOUT = "1";
@@ -122,12 +125,12 @@ public class AutoGephiPipe
         // attributeModel = Lookup.getDefault().lookup(AttributeController.class).getModel();
 
         // Initialize the DynamicProcessor - which will append the container to the workspace
-        dynamicProcessor = new DynamicProcessor();
-        dynamicProcessor.setDateMode(true); // Set 'true' if you set real dates (ex: yyyy-mm-dd), it's double otherwise
-        dynamicProcessor.setLabelmatching(true); // Set 'true' if node matching is done on labels instead of ids
+        // dynamicProcessor = new DynamicProcessor();
+        // dynamicProcessor.setDateMode(true); // Set 'true' if you set real dates (ex: yyyy-mm-dd), it's double otherwise
+        // dynamicProcessor.setLabelmatching(true); // Set 'true' if node matching is done on labels instead of ids
 
-        graph = graphModel.getGraph();
-        graph.readUnlockAll();
+        // graph = graphModel.getGraph();
+        // graph.readUnlockAll();
     }
 
     // Runs Radial Axis layout, each Spire represents a separate community
@@ -155,7 +158,7 @@ public class AutoGephiPipe
         {
             try
             {
-                radLayout.setSparNodePlacement(Ranking.DEGREE_RANKING+"-Att"); // Currently does nothing.
+                // radLayout.setSparNodePlacement(Ranking.DEGREE_RANKING+"-Att"); // Currently does nothing.
             }
             catch(Exception e)
             {
@@ -223,19 +226,19 @@ public class AutoGephiPipe
         distance.execute(graphModel);
 
         // Size by Betweeness centrality
-        RankingController rankingController = Lookup.getDefault().lookup(RankingController.class);
-        Ranking degreeRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, Ranking.DEGREE_RANKING);
+        // RankingController rankingController = Lookup.getDefault().lookup(RankingController.class);
+        // Ranking degreeRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, Ranking.DEGREE_RANKING);
         // Default to Size by Betweenness
-        AttributeColumn centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
+        // AttributeColumn centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
 
         // Set Size by different centralities base on input
         if(sizeNodesBy == "Betweenness")
         {
-            centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
+            // centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
         }
         else if(sizeNodesBy == "Closeness")
         {
-            centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
+            // centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
         }
         // TODO: find proper input to utilize Eigenvector
         // else if(sizeNodesBy=="Eigenvector")
@@ -243,24 +246,24 @@ public class AutoGephiPipe
         //     centralityColumn = attributeModel.getNodeTable().getColumn(EIGENVECTOR);
         // }
 
-        Ranking centralityRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, centralityColumn.getId());
-        AbstractSizeTransformer sizeTransformer = (AbstractSizeTransformer) rankingController.getModel()
-            .getTransformer(Ranking.NODE_ELEMENT, Transformer.RENDERABLE_SIZE);
+        // Ranking centralityRanking = rankingController.getModel().getRanking(Ranking.NODE_ELEMENT, centralityColumn.getId());
+        // AbstractSizeTransformer sizeTransformer = (AbstractSizeTransformer) rankingController.getModel()
+        //     .getTransformer(Ranking.NODE_ELEMENT, Transformer.RENDERABLE_SIZE);
 
-        sizeTransformer.setMinSize(20);
-        sizeTransformer.setMaxSize(100);
-        rankingController.transform(centralityRanking, sizeTransformer);
+        // sizeTransformer.setMinSize(20);
+        // sizeTransformer.setMaxSize(100);
+        // rankingController.transform(centralityRanking, sizeTransformer);
         // Seperate case since not compatible with centrality column
         if(sizeNodesBy == "Degree")
         {
-            rankingController.transform(degreeRanking, sizeTransformer);
+            // rankingController.transform(degreeRanking, sizeTransformer);
         }
     }
 
     public static void colorByCommunity()
     {
         // Color by Community but running modularity measures
-        PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
+        // PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
         System.out.println("Passed Partion Controller");
 
         // Run modularity algorithm - community detection
@@ -274,7 +277,7 @@ public class AutoGephiPipe
         System.out.println("Passed Modularity Resolution");
         try
         {
-            modularity.execute(graphModel, attributeModel);
+            // modularity.execute(graphModel, attributeModel);
         }
         catch(Exception e)
         {
@@ -285,33 +288,33 @@ public class AutoGephiPipe
         System.out.println("Passed Modularity Execute");
 
         // Partition with 'modularity_class', just created by Modularity algorithm
-        AttributeColumn modColumn = attributeModel.getNodeTable().getColumn(Modularity.MODULARITY_CLASS);
+        // AttributeColumn modColumn = attributeModel.getNodeTable().getColumn(Modularity.MODULARITY_CLASS);
         System.out.println("Passed Modularity Column");
         // AttributeColumn timeColumn=attributeModel.getNodeTable().
-        partition = partitionController.buildPartition(modColumn, graph);
+        // partition = partitionController.buildPartition(modColumn, graph);
         System.out.println("Passed Modularity Partition");
-        System.out.println(partition.getPartsCount() + " Communities found");
-        NodeColorTransformer nodeColorTransformer2 = new NodeColorTransformer();
-        nodeColorTransformer2.randomizeColors(partition);
-        partitionController.transform(partition, nodeColorTransformer2);
+        // System.out.println(partition.getPartsCount() + " Communities found");
+        // NodeColorTransformer nodeColorTransformer2 = new NodeColorTransformer();
+        // nodeColorTransformer2.randomizeColors(partition);
+        // partitionController.transform(partition, nodeColorTransformer2);
     }
     // UNused should be deleted!
     public static void runModularity()
     {
         // Color by Community but running modularity measures
-        PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
+        // PartitionController partitionController = Lookup.getDefault().lookup(PartitionController.class);
         // Run modularity algorithm - community detection
         Modularity modularity = new Modularity();
         modularity.setResolution(modResolution);
-        modularity.execute(graphModel, attributeModel);
+        // modularity.execute(graphModel, attributeModel);
     }
 
     public static void circularStarLayout()
     {
-        int communityCount;
+        int communityCount = 42;
         try
         {
-            communityCount=partition.getPartsCount();
+            // communityCount=partition.getPartsCount();
         }
         catch(Exception e){
             e.printStackTrace();
@@ -319,7 +322,7 @@ public class AutoGephiPipe
         }
         FilterController filterController = Lookup.getDefault().lookup(FilterController.class);
 
-        NodePartitionFilter partitionFilter = new NodePartitionFilter(partition);
+        // NodePartitionFilter partitionFilter = new NodePartitionFilter(partition);
         Query query2; // Queries are ran on filtered partitions
         GraphView view2;
 
@@ -330,26 +333,26 @@ public class AutoGephiPipe
         float shifts[]={1,1,1,1,1,1,1,1,1,1,1,1};
         for(int i=0; i<=communityCount-1;i++)
         {
-            partitionFilter.unselectAll();
-            partitionFilter.addPart(partition.getPartFromValue(i)); // Makes a community Active
+            // partitionFilter.unselectAll();
+            // partitionFilter.addPart(partition.getPartFromValue(i)); // Makes a community Active
 
             try
             {
                 graph.readUnlockAll();
-                graphModel=graph.getGraphModel();
+                graphModel = graph.getModel();
             }
             catch(Exception e)
             {
                 e.printStackTrace();
                 return;
             }
-            query2 = filterController.createQuery(partitionFilter);
-            view2 = filterController.filter(query2);
-            graphModel.setVisibleView(view2);
+            // query2 = filterController.createQuery(partitionFilter);
+            // view2 = filterController.filter(query2);
+            // graphModel.setVisibleView(view2);
             // Assigns Partition Node Percentage to Array for sorting
             for(Node n : graphModel.getGraphVisible().getNodes())
             {
-                rankingByPercent[i]=partitionFilter.getPartition().getPart(n).getPercentage();
+                // rankingByPercent[i]=partitionFilter.getPartition().getPart(n).getPercentage();
             }
         }
         //sort(rankingByPercent);
@@ -421,14 +424,14 @@ public class AutoGephiPipe
         {
             try
             {
-                partitionFilter.unselectAll();
-                partitionFilter.addPart(partition.getPartFromValue((int)sortedPercent[i])); // Makes a community Active
+                // partitionFilter.unselectAll();
+                // partitionFilter.addPart(partition.getPartFromValue((int)sortedPercent[i])); // Makes a community Active
                 //System.out.println("Node Count: "+partitionFilter.getCurrentPartition().getElementsCount());
                 //System.out.println("Node Count: "+partitionFilter.getCurrentPartition().getPartsCount());
 
-                query2 = filterController.createQuery(partitionFilter);
-                view2 = filterController.filter(query2);
-                graphModel.setVisibleView(view2);
+                // query2 = filterController.createQuery(partitionFilter);
+                // view2 = filterController.filter(query2);
+                // graphModel.setVisibleView(view2);
                 circLayout();
                 float commCountFloat=(float)communityCount;
                 float percentage=(float) i/commCountFloat;
@@ -474,43 +477,43 @@ public class AutoGephiPipe
                 {
                     if(ordering[i]==1)
                     {
-                        n.getNodeData().setX((n.getNodeData().x()+1000*shifts[0]));
-                        n.getNodeData().setY((n.getNodeData().y()+1000*shifts[0]));
+                        n.setX((n.x()+1000*shifts[0]));
+                        n.setY((n.y()+1000*shifts[0]));
                     }
                     else if(ordering[i]==2)
                     {
-                        n.getNodeData().setX((n.getNodeData().x()+1000*shifts[1]));
-                        n.getNodeData().setY((n.getNodeData().y()-1000*shifts[1]));
+                        n.setX((n.x()+1000*shifts[1]));
+                        n.setY((n.y()-1000*shifts[1]));
                     }
                     else if(ordering[i]==3)
                     {
-                        n.getNodeData().setX((n.getNodeData().x()-1000*shifts[2]));
-                        n.getNodeData().setY((n.getNodeData().y()-1000*shifts[2]));
+                        n.setX((n.x()-1000*shifts[2]));
+                        n.setY((n.y()-1000*shifts[2]));
                     }
                     else if(ordering[i]==4)
                     {
-                        n.getNodeData().setX((n.getNodeData().x()-1000*shifts[3]));
-                        n.getNodeData().setY((n.getNodeData().y()+1000*shifts[3]));
+                        n.setX((n.x()-1000*shifts[3]));
+                        n.setY((n.y()+1000*shifts[3]));
                     }
                     else if(ordering[i]==5)
                     {
-                        n.getNodeData().setX((n.getNodeData().x()+1000*shifts[4]));
-                        n.getNodeData().setY(n.getNodeData().y());
+                        n.setX((n.x()+1000*shifts[4]));
+                        n.setY(n.y());
                     }
                     else if(ordering[i]==6)
                     {
-                        n.getNodeData().setX(n.getNodeData().x());
-                        n.getNodeData().setY(n.getNodeData().y()+1000*shifts[5]);
+                        n.setX(n.x());
+                        n.setY(n.y()+1000*shifts[5]);
                     }
                     else if(ordering[i]==7)
                     {
-                        n.getNodeData().setX((n.getNodeData().x()-1000*shifts[6]));
-                        n.getNodeData().setY(n.getNodeData().y());
+                        n.setX((n.x()-1000*shifts[6]));
+                        n.setY(n.y());
                     }
                     else if(ordering[i]==8)
                     {
-                        n.getNodeData().setX(n.getNodeData().x());
-                        n.getNodeData().setY(n.getNodeData().y()-1000*shifts[7]);
+                        n.setX(n.x());
+                        n.setY(n.y()-1000*shifts[7]);
                     }
                 }
             }
@@ -521,45 +524,47 @@ public class AutoGephiPipe
             }
         }
 
-        partitionFilter.selectAll(); // Make all circles of nodes reappear
+        // partitionFilter.selectAll(); // Make all circles of nodes reappear
 
-        query2 = filterController.createQuery(partitionFilter);
-        view2 = filterController.filter(query2);
-        graphModel.setVisibleView(view2);
+        // query2 = filterController.createQuery(partitionFilter);
+        // view2 = filterController.filter(query2);
+        // graphModel.setVisibleView(view2);
     }
 
     // imports graph and appends it to existing graph
     public static void importGraph(File file)
     {
-        Pattern p = Pattern.compile(fileDateRegex); // used to extract FileDate from imported graph
-        // place imported data into container
+        String fileName = file.getName();
+
         try
         {
-            String fileName = file.getName();
-            String[] tokens = fileName.split("\\.(?=[^\\.]+$)"); // Eliminate input extension for use in output name.
-            processedFile = tokens[0]; // Used for export file name
+            // Eliminate input extension for use in output name.
+            String[] tokens = fileName.split("\\.(?=[^\\.]+$)");
+            // String processedFile = tokens[0];
+
             // Searches file name for a proper date and then appends the date as a time interval
-            Matcher m = p.matcher(fileName);
+            Matcher m = fileDatePattern.matcher(fileName);
             if (m.find())
             {
                 // Set date for this file
                 System.out.println(fileName);
-                System.out.println("Date In " + m.group(1) + " Length: " + m.group(1).length());
-                if(isDate(m.group(1)))
+                System.out.println("Date found: " + m.group(0));
+                if(isDate(m.group(0)))
                 {
-                    dates[dateCounter] = m.group(1); // Gathers Dates of files to be printed to text file for later use
-                    dateCounter++;
-                    System.out.println("File imported: " + file.toString());
-                    container = importController.importFile(file);
-                    if(container == null)
-                    {
-                        System.out.println("Container is null");
-                    }
-                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
-                    System.out.println(fileName + " was appended to graph.");
-                    dynamicProcessor.setDate(m.group(1)); // Set time interval
-                    System.out.println("Date Set: " + dynamicProcessor.getDate());
-                    importController.process(container, dynamicProcessor, workspace);
+                    // dates[dateCounter] = m.group(1); // Gathers Dates of files to be printed to text file for later use
+                    // dateCounter++;
+                    // System.out.println("File imported: " + file.toString());
+                    Container container = importController.importFile(file);
+                    // if(container == null)
+                    // {
+                    //     System.out.println("Container is null");
+                    // }
+                    container.getLoader().setEdgeDefault(EdgeDirectionDefault.UNDIRECTED);
+                    // container.getLoader().setAllowAutoNode(false);
+                    // System.out.println(fileName + " was appended to graph.");
+                    // dynamicProcessor.setDate(m.group(1)); // Set time interval
+                    // System.out.println("Date Set: " + dynamicProcessor.getDate());
+                    importController.process(container, new DefaultProcessor(), workspace);
                     // dates[dateCounter]=newDate; // Gathers Dates of files to be printed to text file for later use
                     // dateCounter++;
                     // System.out.println("File imported: " +file.toString());
@@ -573,128 +578,119 @@ public class AutoGephiPipe
                 }
                 else
                 {
-                    System.out.println("Error, File " + processedFile + " was not appended to graph due to improper File date");
+                    System.err.println("Error: File " + fileName + " could not be imported.");
                 }
             }
-            else // If the Date was not in the file name, attempt to grab date from file itself by finding the first three integers in file
-            {
-                System.out.println("Invalid date in File name, searching .dl for date");
-                int count = 0;
-                try
-                {
-                    read = new Scanner(file);
-                }
-                catch(Exception ex)
-                {
-                    ex.printStackTrace();
-                }
+            // NOTE: previously, it was possible to put the date in the file, but this was disabled
+            // during the update to a newer version of Gephi, possibly to be re-enabled at a later point
+            // else
+            // {
+            //     // If the Date was not in the file name, attempt to grab date from file
+            //     // itself by finding the first three integers in file
+            //     System.out.println("Invalid date in File name, searching .dl for date");
+            //     int count = 0;
+            //     try
+            //     {
+            //         read = new Scanner(file);
+            //     }
+            //     catch(Exception ex)
+            //     {
+            //         ex.printStackTrace();
+            //         return;
+            //     }
 
-                while(read.hasNext())
-                {
-                    String temp = read.next();
-                    p = Pattern.compile(interiorDate);
-                    m = p.matcher(temp);
-                    if(m.find())
-                    {
-                        count++;
-                        if(count == 1 && temp.length() == 4)
-                        {
-                            year = temp;
-                        }
-                        else if(count == 2)
-                        {
-                            // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
-                            if(temp.length() == 1)
-                            {
-                                month = "0" + temp;
-                            }
-                            else
-                            {
-                                month = temp;
-                            }
-                        }
-                        else if(count == 3)
-                        {
-                            // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
-                            if(temp.length() == 1)
-                            {
-                                day = "0" + temp;
-                            }
-                            else
-                            {
-                                day = temp;
-                            }
-                            break;
-                        }
-                    }
-                }
+            //     while(read.hasNext())
+            //     {
+            //         String temp = read.next();
+            //         p = Pattern.compile(interiorDate);
+            //         m = p.matcher(temp);
+            //         if(m.find())
+            //         {
+            //             count++;
+            //             if(count == 1 && temp.length() == 4)
+            //             {
+            //                 year = temp;
+            //             }
+            //             else if(count == 2)
+            //             {
+            //                 // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
+            //                 if(temp.length() == 1)
+            //                 {
+            //                     month = "0" + temp;
+            //                 }
+            //                 else
+            //                 {
+            //                     month = temp;
+            //                 }
+            //             }
+            //             else if(count == 3)
+            //             {
+            //                 // if date is 2008 1 1, must be converted to 2008 01 01 so that it is compatible as time interval
+            //                 if(temp.length() == 1)
+            //                 {
+            //                     day = "0" + temp;
+            //                 }
+            //                 else
+            //                 {
+            //                     day = temp;
+            //                 }
+            //                 break;
+            //             }
+            //         }
+            //     }
 
-                String newDate = year + "-" + month + "-" + day;
-                System.out.println(newDate);
+            //     String newDate = year + "-" + month + "-" + day;
+            //     System.out.println(newDate);
 
-                if(isDate(newDate) == true)
-                {
-                    dates[dateCounter] = newDate; // Gathers Dates of files to be printed to text file for later use
-                    dateCounter++;
-                    System.out.println("File imported: " + file.toString());
-                    container = importController.importFile(file);
-                    container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
-                    System.out.println(fileName + " was appended to graph.");
-                    dynamicProcessor.setDate(newDate); // Set time interval
-                    System.out.println("Date Set: " + dynamicProcessor.getDate());
-                    // Process the container using the DynamicProcessor
-                    importController.process(container, dynamicProcessor, workspace);
-                }
-                else
-                {
-                    System.out.println("Error, File " + processedFile + " was not appended to graph due to improper File date");
-                }
-            }
+            //     if(isDate(newDate) == true)
+            //     {
+            //         // dates[dateCounter] = newDate; // Gathers Dates of files to be printed to text file for later use
+            //         // dateCounter++;
+            //         // System.out.println("File imported: " + file.toString());
+            //         Container container = importController.importFile(file);
+            //         container.getLoader().setEdgeDefault(EdgeDefault.UNDIRECTED); // set to undirected
+            //         // System.out.println(fileName + " was appended to graph.");
+            //         // dynamicProcessor.setDate(newDate); // Set time interval
+            //         // System.out.println("Date Set: " + dynamicProcessor.getDate());
+            //         // Process the container using the DynamicProcessor
+            //         importController.process(container, new DefaultProcessor(), workspace);
+            //     }
+            //     else
+            //     {
+            //         System.err.println("Error: File " + fileName + " could not be imported.");
+            //     }
+            // }
         }
         catch(Exception ex)
         {
             ex.printStackTrace();
+            return;
         }
     }
 
     // Takes in an entire Directory of files and attempts to import each one of them,
     // if the import file is determined to not be a directory, a simple single file import is called.
-    public static void importDirectory(String dirName)
+    public static void importDirOrFile(String path)
     {
-        File tempFile = new File(dirName);
-        if(tempFile.isDirectory())
+        File input = new File(path);
+        if(input.isDirectory())
         {
-            File[] files = new File(dirName).listFiles();
-            System.out.println("Processing directory: " + dirName);
+            File[] files = new File(path).listFiles();
+            System.out.println("Processing directory: " + path);
 
-            for (int i = 0; i <= files.length - 1; i++)
-            {
-                try
-                {
-                    importGraph(files[i]);
-                }
-                catch (Exception e)
-                {
-                    System.out.println(files[i].toString() + " is not a graph file");
-                }
+            for (File file : files) {
+                importGraph(file);
             }
         }
-        else if(tempFile.isFile())
+        else if(input.isFile())
         {
-            System.out.println("Processing Single File: " + dirName);
-            try
-            {
-                importGraph(tempFile);
-            }
-            catch(Exception e)
-            {
-                e.printStackTrace();
-            }
+            System.out.println("Processing single file: " + path);
+            importGraph(input);
         }
     }
 
     // Exports a gexf file to be used in Gephi or Partiview, exports PDF for easy sample readability of entire graph.
-    public static void exportGraph(String dirName)
+    public static void exportGraph(String dirName, String outputFilename)
     {
         // Set 'show labels' option in Preview - and disable node size influence on text size
         PreviewModel previewModel = Lookup.getDefault().lookup(PreviewController.class).getModel();
@@ -704,11 +700,13 @@ public class AutoGephiPipe
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try
         {
-            Path path = ((Paths.get(dirName)).getParent()).getParent(); 
+            Path path = ((Paths.get(dirName)).getParent()).getParent();
             // System.out.println("writeGraphOut " + path.toString()); // processedFile +" "
             // ec.exportFile(new File("completeLayout.gexf"));
-            ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".pdf"));
-            ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".gexf"));
+            // ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".pdf"));
+            // ec.exportFile(new File(path.toString()+"/partiview_generator/"+processedFile+".gexf"));
+            ec.exportFile(new File(path.toString()+"/partiview_generator/"+outputFilename+".pdf"));
+            ec.exportFile(new File(path.toString()+"/partiview_generator/"+outputFilename+".gexf"));
             // ec.exportFile(new File(processedFile+".pdf"));
         }
         catch (IOException ex)
@@ -802,6 +800,18 @@ public class AutoGephiPipe
         else // reset to default
         {
             modResolution=0.4;
+        }
+    }
+
+    public static void testExport()
+    {
+        //Export full graph
+        ExportController ec = Lookup.getDefault().lookup(ExportController.class);
+        try {
+            ec.exportFile(new File("test.gexf"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return;
         }
     }
 }

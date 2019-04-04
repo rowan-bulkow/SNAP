@@ -42,42 +42,44 @@ public class Main
             try(Stream<Path> paths = Files.walk(inputPath)) {
                 paths.forEach(filePath -> {
                     if(Files.isRegularFile(filePath)) {
-                        System.out.println(filePath.toString());
+                        // System.out.println(filePath.toString());
 
                         if(filePath.toString().endsWith(".dl")) {
                             AutoGephiPipe.initialize();
 
-                            AutoGephiPipe.importDirectory(filePath.toString());
+                            AutoGephiPipe.importDirOrFile(filePath.toString());
 
-                            AutoGephiPipe.setModResolution(inputModResolution);
+                            // AutoGephiPipe.setModResolution(inputModResolution);
 
-                            AutoGephiPipe.setSizeNodesBy("Betweenness");
+                            // AutoGephiPipe.setSizeNodesBy("Betweenness");
 
-                            AutoGephiPipe.sizeNodes();
+                            // AutoGephiPipe.sizeNodes();
 
-                            AutoGephiPipe.colorByCommunity();
+                            // AutoGephiPipe.colorByCommunity();
 
-                            switch (inputLayout) {
-                                case AutoGephiPipe.CIRCULAR_STAR_LAYOUT:
-                                    AutoGephiPipe.circularStarLayout();
-                                    break;
-                                case AutoGephiPipe.RADIAL_AXIS_LAYOUT:
-                                    AutoGephiPipe.radialAxLayout();
-                                    break;
-                                case AutoGephiPipe.YIFAN_HU_LAYOUT:
-                                    AutoGephiPipe.yifanHuLayout();
-                                    break;
-                                case AutoGephiPipe.FORCE_ATLAS_LAYOUT:
-                                    AutoGephiPipe.forceAtlasLayout();
-                                    break;
-                                default:
-                                    System.err.println("Error: Invalid layout");
-                                    System.exit(1);
-                                    break;
-                            }
+                            // switch (inputLayout) {
+                            //     case AutoGephiPipe.CIRCULAR_STAR_LAYOUT:
+                            //         AutoGephiPipe.circularStarLayout();
+                            //         break;
+                            //     case AutoGephiPipe.RADIAL_AXIS_LAYOUT:
+                            //         AutoGephiPipe.radialAxLayout();
+                            //         break;
+                            //     case AutoGephiPipe.YIFAN_HU_LAYOUT:
+                            //         AutoGephiPipe.yifanHuLayout();
+                            //         break;
+                            //     case AutoGephiPipe.FORCE_ATLAS_LAYOUT:
+                            //         AutoGephiPipe.forceAtlasLayout();
+                            //         break;
+                            //     default:
+                            //         System.err.println("Error: Invalid layout");
+                            //         System.exit(1);
+                            //         break;
+                            // }
 
-                            AutoGephiPipe.exportGraph(filePath.toString());
-                            //AutoGephiPipe.exportDates();
+                            // AutoGephiPipe.exportGraph(filePath.toString());
+                            // // AutoGephiPipe.exportDates();
+
+                            AutoGephiPipe.testExport();
                         }
                     }
                 });
