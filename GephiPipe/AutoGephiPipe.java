@@ -21,6 +21,9 @@ import java.util.concurrent.CountDownLatch;
 
 import org.gephi.appearance.api.AppearanceController;
 import org.gephi.appearance.api.AppearanceModel;
+import org.gephi.graph.api.Column;
+import org.gephi.appearance.plugin.RankingNodeSizeTransformer;
+import org.gephi.appearance.api.Function;
 // import org.gephi.datalab.api.AttributeColumn;
 // import org.gephi.datalab.api.AttributeController;
 // import org.gephi.datalab.api.AttributeModel;
@@ -109,6 +112,10 @@ public class AutoGephiPipe
     public static final String YIFAN_HU_LAYOUT = "2";
     public static final String FORCE_ATLAS_LAYOUT = "3";
 
+    public static final String BETWEENNESS = "Betweenness";
+    public static final String CLOSENESS = "Closeness";
+    public static final String DEGREE = "Degree";
+
     // Initialize a project and a workspace
     public static void initialize()
     {
@@ -120,9 +127,12 @@ public class AutoGephiPipe
 
         importController = Lookup.getDefault().lookup(ImportController.class);
         graphModel = Lookup.getDefault().lookup(GraphController.class).getGraphModel();
+        graph = graphModel.getGraph();
         appearanceController = Lookup.getDefault().lookup(AppearanceController.class);
         appearanceModel = appearanceController.getModel();
         // attributeModel = Lookup.getDefault().lookup(AttributeController.class).getModel();
+
+        graphModel.getNodeTable().addColumn("date", "".getClass());
 
         // Initialize the DynamicProcessor - which will append the container to the workspace
         // dynamicProcessor = new DynamicProcessor();
@@ -232,14 +242,14 @@ public class AutoGephiPipe
         // AttributeColumn centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
 
         // Set Size by different centralities base on input
-        if(sizeNodesBy == "Betweenness")
-        {
-            // centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
-        }
-        else if(sizeNodesBy == "Closeness")
-        {
-            // centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
-        }
+        // if(sizeNodesBy == "Betweenness")
+        // {
+        //     // centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
+        // }
+        // else if(sizeNodesBy == "Closeness")
+        // {
+        //     // centralityColumn = attributeModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
+        // }
         // TODO: find proper input to utilize Eigenvector
         // else if(sizeNodesBy=="Eigenvector")
         // {
@@ -254,9 +264,43 @@ public class AutoGephiPipe
         // sizeTransformer.setMaxSize(100);
         // rankingController.transform(centralityRanking, sizeTransformer);
         // Seperate case since not compatible with centrality column
-        if(sizeNodesBy == "Degree")
+        // if(sizeNodesBy == "Degree")
+        // {
+        //     // rankingController.transform(degreeRanking, sizeTransformer);
+        // }
+
+        if(sizeNodesBy == AutoGephiPipe.CLOSENESS)
         {
-            // rankingController.transform(degreeRanking, sizeTransformer);
+            Column centralityColumn = graphModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
+            Function centralityRanking = appearanceModel.getNodeFunction(graph, centralityColumn, RankingNodeSizeTransformer.class);
+            RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
+            centralityTransformer.setMinSize(3);
+            centralityTransformer.setMaxSize(10);
+            appearanceController.transform(centralityRanking);
+        }
+        else if(sizeNodesBy == AutoGephiPipe.DEGREE)
+        {
+            Function centralityRanking = appearanceModel.getNodeFunction(
+                graph,
+                AppearanceModel.GraphFunction.NODE_DEGREE,
+                RankingNodeSizeTransformer.class);
+            RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
+            centralityTransformer.setMinSize(3);
+            centralityTransformer.setMaxSize(10);
+            appearanceController.transform(centralityRanking);
+        }
+        else if(sizeNodesBy == AutoGephiPipe.BETWEENNESS)
+        {
+            Column centralityColumn = graphModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
+            Function centralityRanking = appearanceModel.getNodeFunction(graph, centralityColumn, RankingNodeSizeTransformer.class);
+            RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
+            centralityTransformer.setMinSize(3);
+            centralityTransformer.setMaxSize(10);
+            appearanceController.transform(centralityRanking);
+        }
+        else
+        {
+            System.err.println("No sizing meteric specified.");
         }
     }
 
@@ -546,11 +590,12 @@ public class AutoGephiPipe
             Matcher m = fileDatePattern.matcher(fileName);
             if (m.find())
             {
-                // Set date for this file
-                System.out.println(fileName);
-                System.out.println("Date found: " + m.group(0));
                 if(isDate(m.group(0)))
                 {
+                    String date = m.group(0);
+                    System.out.println(fileName);
+                    System.out.println("Date found: " + m.group(0));
+
                     // dates[dateCounter] = m.group(1); // Gathers Dates of files to be printed to text file for later use
                     // dateCounter++;
                     // System.out.println("File imported: " + file.toString());
@@ -565,6 +610,13 @@ public class AutoGephiPipe
                     // dynamicProcessor.setDate(m.group(1)); // Set time interval
                     // System.out.println("Date Set: " + dynamicProcessor.getDate());
                     importController.process(container, new DefaultProcessor(), workspace);
+
+                    // Set date for this file
+                    for(Node node : graph.getNodes())
+                    {
+                        node.setAttribute("date", date);
+                    }
+
                     // dates[dateCounter]=newDate; // Gathers Dates of files to be printed to text file for later use
                     // dateCounter++;
                     // System.out.println("File imported: " +file.toString());

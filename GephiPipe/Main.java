@@ -49,11 +49,11 @@ public class Main
 
                             AutoGephiPipe.importDirOrFile(filePath.toString());
 
-                            // AutoGephiPipe.setModResolution(inputModResolution);
+                            AutoGephiPipe.setModResolution(inputModResolution);
 
-                            // AutoGephiPipe.setSizeNodesBy("Betweenness");
+                            AutoGephiPipe.setSizeNodesBy(AutoGephiPipe.BETWEENNESS);
 
-                            // AutoGephiPipe.sizeNodes();
+                            AutoGephiPipe.sizeNodes();
 
                             // AutoGephiPipe.colorByCommunity();
 
