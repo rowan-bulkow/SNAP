@@ -274,8 +274,8 @@ public class AutoGephiPipe
             Column centralityColumn = graphModel.getNodeTable().getColumn(GraphDistance.CLOSENESS);
             Function centralityRanking = appearanceModel.getNodeFunction(graph, centralityColumn, RankingNodeSizeTransformer.class);
             RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
-            centralityTransformer.setMinSize(3);
-            centralityTransformer.setMaxSize(10);
+            centralityTransformer.setMinSize(20);
+            centralityTransformer.setMaxSize(100);
             appearanceController.transform(centralityRanking);
         }
         else if(sizeNodesBy == AutoGephiPipe.DEGREE)
@@ -285,8 +285,8 @@ public class AutoGephiPipe
                 AppearanceModel.GraphFunction.NODE_DEGREE,
                 RankingNodeSizeTransformer.class);
             RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
-            centralityTransformer.setMinSize(3);
-            centralityTransformer.setMaxSize(10);
+            centralityTransformer.setMinSize(20);
+            centralityTransformer.setMaxSize(100);
             appearanceController.transform(centralityRanking);
         }
         else if(sizeNodesBy == AutoGephiPipe.BETWEENNESS)
@@ -294,8 +294,8 @@ public class AutoGephiPipe
             Column centralityColumn = graphModel.getNodeTable().getColumn(GraphDistance.BETWEENNESS);
             Function centralityRanking = appearanceModel.getNodeFunction(graph, centralityColumn, RankingNodeSizeTransformer.class);
             RankingNodeSizeTransformer centralityTransformer = (RankingNodeSizeTransformer) centralityRanking.getTransformer();
-            centralityTransformer.setMinSize(3);
-            centralityTransformer.setMaxSize(10);
+            centralityTransformer.setMinSize(20);
+            centralityTransformer.setMaxSize(100);
             appearanceController.transform(centralityRanking);
         }
         else
