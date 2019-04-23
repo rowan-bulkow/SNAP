@@ -20,8 +20,8 @@
 #
 # Where command is one of the following:
 #
-# run - runs gephi-pipe.jar, requires input path, allows params: layout, modResolution
-#   build.sh run inputPath [layout modResolution]
+# run - runs gephi-pipe.jar, requires input path, allows params: layout, modResolution, sizeMetric
+#   build.sh run inputPath [layout modResolution sizeMetric]
 #
 # build - compiles java files, bundles into gephi-pipe.jar, does not take any params
 #   build.sh build
@@ -37,6 +37,10 @@
 #     2 - Yifan Hu layout
 #     3 - Force Atlas layout
 # modResolution - desired mod resolution. Default: 0.4
+# sizeMetric - desired metric for resizing. Default: betweenness. Possible values:
+#     betweenness
+#     closeness
+#     degree
 #
 
 build() {
@@ -54,7 +58,7 @@ build() {
 }
 
 run() {
-    java -jar gephi-pipe.jar $1 $2 $3
+    java -jar gephi-pipe.jar $1 $2 $3 $4
     if [[ $? == 0 ]]; then
         return 0
     fi
@@ -65,7 +69,7 @@ run() {
 command=$1
 
 if [[ "$command" == "run" ]]; then
-    if [[ $# < 2 || $# > 4 ]]; then
+    if [[ $# < 2 || $# > 5 ]]; then
         echo "Error: Invalid number of arguments for run."
         exit 1
     fi
@@ -73,19 +77,31 @@ if [[ "$command" == "run" ]]; then
     input=$2
     layout="0"
     modResolution="0.4"
+    sizeMetric="betweenness"
     if [[ $# == 3 ]]; then
         layout=$3
     elif [[ $# == 4 ]]; then
         layout=$3
         modResolution=$4
+    elif [[ $# == 5 ]]; then
+        layout=$3
+        modResolution=$4
+        sizeMetric=$5
     fi
-    run $input $layout $modResolution
+    run $input $layout $modResolution $sizeMetric
 elif [[ "$command" == "build" ]]; then
     build
+    if [[ $? != 0 ]]; then
+        exit 1
+    fi
 elif [[ "$command" == "buildandrun" ]]; then
     build
+    if [[ $? != 0 ]]; then
+        echo "Error: Problem building, cancelling run."
+        exit 1
+    fi
 
-    if [[ $# < 2 || $# > 4 ]]; then
+    if [[ $# < 2 || $# > 5 ]]; then
         echo "Error: Invalid number of arguments for run."
         exit 1
     fi
@@ -93,13 +109,18 @@ elif [[ "$command" == "buildandrun" ]]; then
     input=$2
     layout="0"
     modResolution="0.4"
+    sizeMetric="betweenness"
     if [[ $# == 3 ]]; then
         layout=$3
     elif [[ $# == 4 ]]; then
         layout=$3
         modResolution=$4
+    elif [[ $# == 5 ]]; then
+        layout=$3
+        modResolution=$4
+        sizeMetric=$5
     fi
-    run $input $layout $modResolution
+    run $input $layout $modResolution $sizeMetric
 else
     echo "Error: Command not recognized."
 fi
