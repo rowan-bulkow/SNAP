@@ -172,8 +172,8 @@ public class AutoGephiPipe {
             radLayout.setSparNodePlacement(GraphDistance.CLOSENESS + "-Att");
         } else if (sizeNodesBy == "Degree") {
             try {
-                // radLayout.setSparNodePlacement(Ranking.DEGREE_RANKING+"-Att"); // Currently
-                // does nothing.
+                // radLayout.setSparNodePlacement(Ranking.DEGREE_RANKING+"-Att");
+                // Currently does nothing.
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -643,24 +643,19 @@ public class AutoGephiPipe {
     // Exports a gexf file to be used in Gephi or Partiview, exports PDF for easy
     // sample readability of entire graph.
     public static void exportGraph(String dirName, String outputFilename) {
-        // Set 'show labels' option in Preview - and disable node size influence on text
-        // size
+        System.out.println("exporting?");
+
+        // // Set 'show labels' option in Preview - and disable node size influence on text size
         PreviewModel previewModel = Lookup.getDefault().lookup(PreviewController.class).getModel();
         previewModel.getProperties().putValue(PreviewProperty.SHOW_NODE_LABELS, Boolean.TRUE);
         previewModel.getProperties().putValue(PreviewProperty.NODE_LABEL_PROPORTIONAL_SIZE, Boolean.FALSE);
 
         ExportController ec = Lookup.getDefault().lookup(ExportController.class);
         try {
-            Path path = ((Paths.get(dirName)).getParent()).getParent();
-            // System.out.println("writeGraphOut " + path.toString()); // processedFile +" "
-            // ec.exportFile(new File("completeLayout.gexf"));
-            // ec.exportFile(new
-            // File(path.toString()+"/partiview_generator/"+processedFile+".pdf"));
-            // ec.exportFile(new
-            // File(path.toString()+"/partiview_generator/"+processedFile+".gexf"));
+            Path path = Paths.get(dirName).getParent();
+            System.out.println("exporting to: " + path.toString());
             ec.exportFile(new File(path.toString() + "/partiview_generator/" + outputFilename + ".pdf"));
             ec.exportFile(new File(path.toString() + "/partiview_generator/" + outputFilename + ".gexf"));
-            // ec.exportFile(new File(processedFile+".pdf"));
         } catch (IOException ex) {
             ex.printStackTrace();
             return;

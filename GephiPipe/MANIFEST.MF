@@ -4,5 +4,5 @@ Created-By: 1.7.0_80-b15 (Oracle Corporation)
 Class-Path: lib/gephi-toolkit.jar lib/org-gephi-layout-plugin-circular
  layout.jar
 X-COMMENT: Main-Class will be added automatically by build
-Main-Class: Main
+Main-Class: GephiPipeRunner
 

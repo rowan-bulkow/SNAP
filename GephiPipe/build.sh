@@ -27,7 +27,7 @@
 #   build.sh build
 #
 # buildandrun - builds, then runs. Requires and allows the same arguments that run does.
-#   build.sh buildandrun inputPath [layout modResolution]
+#   build.sh buildandrun inputPath [layout modResolution sizeMetric]
 #
 # Params:
 # inputPath - folder containing input .dl files
