@@ -42,6 +42,11 @@
 #     closeness
 #     degree
 #
+# Examples:
+# ./build.sh build
+# ./build.sh run ~/SNAP-Files/user/semantic_networks 1 0.4 betweenness
+# ./build.sh buildandrun ~/test-input
+#
 
 build() {
     echo "Building..."
